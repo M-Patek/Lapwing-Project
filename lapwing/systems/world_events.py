@@ -14,9 +14,9 @@ from typing import Optional
 import httpx
 from jinja2 import Environment, FileSystemLoader
 
-from settings import Settings
-from llm_provider import MultiProviderManager, LLMConfig
-from utils import save_json
+from lapwing.core.settings import Settings
+from lapwing.api.llm_provider import MultiProviderManager
+from lapwing.utils.utils import save_json
 
 
 class WorldClock:
@@ -223,7 +223,7 @@ class WorldStateUpdater:
 
         try:
             response = await self.api_manager.scene_provider.chat(
-                prompt, LLMConfig(temperature=0.95, max_tokens=500)
+                prompt
             )
             return response.text.strip()[:500]  # Limit length
         except Exception as e:

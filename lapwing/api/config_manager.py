@@ -14,7 +14,7 @@ import yaml
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-from settings import Settings
+from lapwing.core.settings import Settings
 
 
 @dataclass
@@ -43,6 +43,7 @@ class ConfigManager:
     Configuration manager with hot reload support.
 
     Usage:
+        from lapwing.api.config_manager import ConfigManager
         config = ConfigManager(settings)
         await config.start_watching()
 
@@ -117,7 +118,7 @@ class ConfigManager:
 
         # Watch settings files
         settings_files = [
-            Path("settings.py"),
+            Path("lapwing/core/settings.py"),
             Path("config.yaml"),
             Path("conf.yaml"),
         ]
@@ -291,28 +292,3 @@ def get_config_manager(settings: Optional[Settings] = None) -> ConfigManager:
             raise RuntimeError("Settings required for first initialization")
         _config_manager = ConfigManager(settings)
     return _config_manager
-
-
-# Example usage
-if __name__ == "__main__":
-
-    async def main():
-        settings = Settings()
-        config = get_config_manager(settings)
-
-        # Register change handler
-        def on_temp_change(change: ConfigChange):
-            print(f"Temperature changed: {change.old_value} -> {change.new_value}")
-
-        config.on_change("TEMPERATURE", on_temp_change)
-
-        # Start watching
-        await config.start_watching()
-
-        # Wait for changes
-        print("Modify .env file to see hot reload in action...")
-        await asyncio.sleep(60)
-
-        config.stop_watching()
-
-    asyncio.run(main())

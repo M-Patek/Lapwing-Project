@@ -6,8 +6,8 @@ Run with: pytest tests/test_main.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from main import Lapwing, EmotionalState
-from settings import Settings
+from lapwing.core.main import Lapwing, EmotionalState
+from lapwing.core.settings import Settings
 
 
 # Mark all tests as asyncio
@@ -76,7 +76,7 @@ class TestLapwing:
         mock_settings.PARIS_TZ = None
 
         # Patch Settings constructor
-        monkeypatch.setattr("main.Settings", lambda: mock_settings)
+        monkeypatch.setattr("lapwing.core.main.Settings", lambda: mock_settings)
 
         # Mock API manager
         mock_api_manager = MagicMock()
@@ -85,7 +85,7 @@ class TestLapwing:
         mock_api_manager.embedding_client = AsyncMock()
 
         # Patch ApiClientManager
-        monkeypatch.setattr("main.ApiClientManager", lambda s: mock_api_manager)
+        monkeypatch.setattr("lapwing.core.main.MultiProviderManager", lambda s: mock_api_manager)
 
         # Mock MemoryManager
         mock_memory = MagicMock()
@@ -102,13 +102,14 @@ class TestLapwing:
         mock_memory.retrieve_style_exemplars = AsyncMock(return_value=[])
         mock_memory.build_style_index_async = AsyncMock()
 
-        monkeypatch.setattr("main.MemoryManager", lambda *args, **kwargs: mock_memory)
+        monkeypatch.setattr("lapwing.core.main.WeightedMemoryManager", lambda *args, **kwargs: mock_memory)
 
         # Mock file operations
-        monkeypatch.setattr("main.load_or_initialize_json", lambda *args: {})
-        monkeypatch.setattr("main.Path.exists", lambda self: True)
+        from lapwing.utils.utils import load_or_initialize_json
+        monkeypatch.setattr("lapwing.core.main.load_or_initialize_json", lambda *args: {})
+        monkeypatch.setattr("lapwing.core.main.Path.exists", lambda self: True)
         monkeypatch.setattr(
-            "main.Path.read_text", lambda *args, **kwargs: "Test content"
+            "lapwing.core.main.Path.read_text", lambda *args, **kwargs: "Test content"
         )
 
         # Create instance
@@ -123,7 +124,7 @@ class TestLapwing:
         lapwing, api_manager, _ = mock_lapwing
 
         # Mock scene client to return positive
-        api_manager.scene_client.generate_content = AsyncMock(return_value="7.5")
+        api_manager.scene_client.chat = AsyncMock(return_value=MagicMock(text="7.5"))
 
         impact = await lapwing._analyze_emotional_impact("I love you!")
         assert impact > 0
@@ -134,7 +135,7 @@ class TestLapwing:
         lapwing, api_manager, _ = mock_lapwing
 
         # Mock scene client to return negative
-        api_manager.scene_client.generate_content = AsyncMock(return_value="-5.0")
+        api_manager.scene_client.chat = AsyncMock(return_value=MagicMock(text="-5.0"))
 
         impact = await lapwing._analyze_emotional_impact("I hate you")
         assert impact < 0
@@ -152,7 +153,7 @@ class TestLapwing:
         lapwing, api_manager, _ = mock_lapwing
 
         # Mock API failure
-        api_manager.scene_client.generate_content = AsyncMock(
+        api_manager.scene_client.chat = AsyncMock(
             side_effect=Exception("API error")
         )
 
@@ -165,14 +166,14 @@ class TestUtils:
 
     def test_safe_json_loads_valid(self):
         """Test parsing valid JSON."""
-        from utils import safe_json_loads
+        from lapwing.utils.utils import safe_json_loads
 
         result = safe_json_loads('{"key": "value"}')
         assert result == {"key": "value"}
 
     def test_safe_json_loads_markdown(self):
         """Test parsing JSON in markdown."""
-        from utils import safe_json_loads
+        from lapwing.utils.utils import safe_json_loads
 
         text = '```json\n{"key": "value"}\n```'
         result = safe_json_loads(text)
@@ -180,14 +181,14 @@ class TestUtils:
 
     def test_safe_json_loads_invalid(self):
         """Test invalid JSON returns default."""
-        from utils import safe_json_loads
+        from lapwing.utils.utils import safe_json_loads
 
         result = safe_json_loads("not json", default=[])
         assert result == []
 
     def test_safe_json_loads_custom_default(self):
         """Test custom default value."""
-        from utils import safe_json_loads
+        from lapwing.utils.utils import safe_json_loads
 
         result = safe_json_loads("invalid", default=None)
         assert result is None

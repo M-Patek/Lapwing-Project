@@ -12,8 +12,8 @@ from typing import Optional, Callable, List, Dict, Any
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from settings import Settings
-from utils import load_or_initialize_json, save_json
+from lapwing.core.settings import Settings
+from lapwing.utils.utils import load_or_initialize_json, save_json
 
 
 class ProactiveState(Enum):

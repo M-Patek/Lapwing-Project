@@ -53,6 +53,12 @@ ENV/
 htmlcov/
 .pytest_cache/
 
+# Tool caches
+.ruff_cache/
+
+# Claude Code
+.claude/worktrees/
+
 # Build artifacts
 build/
 dist/

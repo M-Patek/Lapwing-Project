@@ -47,6 +47,7 @@ class LapwingLogger:
     Structured logger for Lapwing.
 
     Usage:
+        from lapwing.utils.structured_logging import LapwingLogger
         logger = LapwingLogger()
         logger.info("Server started", extra={"port": 8000})
         logger.error("API failed", extra={"error": str(e), "latency": 0.5})
@@ -165,18 +166,3 @@ def log_proactive_trigger(intent_type: str, message: str, boredom: float, **kwar
         boredom=round(boredom, 2),
         **kwargs,
     )
-
-
-# Example usage
-if __name__ == "__main__":
-    logger = get_logger()
-
-    # Basic logging
-    logger.info("Server started", port=8000, env="production")
-
-    # Structured logging
-    log_api_request("POST", "/chat", 0.5, 200, user_id="user_123")
-    log_llm_call("deepseek", "deepseek-v4", 1.2, 100, 50)
-    log_emotion_change(50.0, 65.5, "positive_message")
-    log_memory_operation("add", "mem_001", content_preview="User likes...")
-    log_proactive_trigger("express_missing", "I miss you...", 75.5)

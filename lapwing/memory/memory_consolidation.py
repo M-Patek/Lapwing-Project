@@ -1,7 +1,7 @@
 """
 Memory Consolidation Script
 Processes staged memories and promotes significant ones to long-term storage.
-Run periodically (e.g., nightly via cron) or manually with `python run_consolidation.py`
+Run periodically (e.g., nightly via cron) or manually with `python -m lapwing.scripts.run_consolidation`
 """
 
 import asyncio
@@ -12,11 +12,9 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from dotenv import load_dotenv
-from settings import Settings
-from api_client import ApiClientManager
-from utils import load_or_initialize_json, save_json, safe_json_loads
 
 
+# Setup logging
 def setup_consolidation_logging() -> None:
     """Setup logging for consolidation runs."""
     log_dir = Path("logs")
@@ -36,7 +34,7 @@ def setup_consolidation_logging() -> None:
 class MemoryConsolidator:
     """Consolidates staged memories into long-term storage."""
 
-    def __init__(self, settings: Settings, api_manager: ApiClientManager):
+    def __init__(self, settings, api_manager):
         self.settings = settings
         self.api_manager = api_manager
 
@@ -80,8 +78,14 @@ Return JSON:
 Return empty arrays if none are significant."""
 
         try:
-            response = await self.api_manager.scene_client.generate_content(prompt)
-            return safe_json_loads(response, {})
+            response = await self.api_manager.scene_provider.chat(prompt)
+            text = response.text if hasattr(response, 'text') else str(response)
+            # Parse JSON from response
+            import re
+            json_match = re.search(r'\{.*\}', text, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
+            return {}
         except Exception as e:
             logging.error(f"Memory evaluation failed: {e}")
             return None
@@ -143,6 +147,7 @@ Return empty arrays if none are significant."""
         archive_file = Path("json/archived_memories.json")
 
         # Load existing archive
+        from lapwing.utils.utils import load_or_initialize_json, save_json
         archive = load_or_initialize_json(archive_file, {"archived": []})
 
         # Add processed memories with timestamp
@@ -164,6 +169,8 @@ Return empty arrays if none are significant."""
         Returns:
             Statistics about the consolidation run
         """
+        from lapwing.utils.utils import load_or_initialize_json, save_json
+
         stats = {
             "staged_count": 0,
             "added_preferences": 0,
@@ -233,6 +240,9 @@ Return empty arrays if none are significant."""
 
 async def main():
     """Entry point for consolidation script."""
+    from lapwing.core.settings import Settings
+    from lapwing.api.api_client import ApiClientManager
+
     load_dotenv()
     setup_consolidation_logging()
 

@@ -14,9 +14,9 @@ from dataclasses import dataclass
 from datetime import datetime
 import math
 
-from settings import Settings
-from utils import load_or_initialize_json, save_json
-from llm_provider import MultiProviderManager
+from lapwing.core.settings import Settings
+from lapwing.utils.utils import load_or_initialize_json, save_json
+from lapwing.api.llm_provider import MultiProviderManager
 
 
 @dataclass
@@ -410,7 +410,7 @@ class WeightedMemoryManager:
 
     async def _get_embeddings_async(self, texts: List[str]) -> List[List[float]]:
         """异步获取嵌入"""
-        return await self.api_manager.embedding_client.get_embeddings(texts)
+        return await self.api_manager.embedding_provider.get_embeddings(texts)
 
     def _calculate_memory_score(
         self, memory: WeightedMemory, query: str, similarity: float, current_eii: float

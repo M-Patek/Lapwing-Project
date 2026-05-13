@@ -1,5 +1,4 @@
-"""
-Lapwing Core - AI Character with Emotional Intelligence
+"""Lapwing Core - AI Character with Emotional Intelligence
 Main orchestrator for conversation, emotion tracking, and memory management.
 Includes Proactive Behavior, Weighted Memory, and Dreaming systems.
 """
@@ -13,19 +12,19 @@ from zoneinfo import ZoneInfo
 from typing import Optional, List, Dict, Any
 from jinja2 import Environment, FileSystemLoader
 
-from settings import Settings
-from memory_weighted import WeightedMemoryManager, MemoryConfig
-from llm_provider import MultiProviderManager
-from world_events import WorldStateUpdater
-from proactive_system import BoredomSystem, BoredomConfig
-from dreaming_system import DreamingSystem, DreamingConfig
-from event_bus import (
+from lapwing.core.settings import Settings
+from lapwing.memory.memory_weighted import WeightedMemoryManager, MemoryConfig
+from lapwing.api.llm_provider import MultiProviderManager
+from lapwing.systems.world_events import WorldStateUpdater
+from lapwing.systems.proactive_system import BoredomSystem, BoredomConfig
+from lapwing.systems.dreaming_system import DreamingSystem, DreamingConfig
+from lapwing.systems.event_bus import (
     get_event_bus,
     emit_eii_changed,
     emit_memory_added,
     emit_proactive_triggered,
 )
-from utils import safe_json_loads, load_or_initialize_json, save_json
+from lapwing.utils.utils import safe_json_loads, load_or_initialize_json, save_json
 
 
 def setup_logging(log_level: str = "INFO") -> None:
@@ -264,8 +263,9 @@ Input: "{user_input}"
 Return only a number between -10 and +10.'''
 
         try:
-            response = await self.api_manager.scene_client.generate_content(prompt)
-            numbers = re.findall(r"-?\d+\.?\d*", response)
+            response = await self.api_manager.scene_provider.chat(prompt)
+            text = response.text if hasattr(response, 'text') else str(response)
+            numbers = re.findall(r"-?\d+\.?\d*", text)
             if numbers:
                 impact = float(numbers[0])
                 return max(-10.0, min(10.0, impact))
@@ -290,8 +290,9 @@ Output JSON format:
 Return empty arrays if nothing significant.'''
 
         try:
-            response = await self.api_manager.scene_client.generate_content(prompt)
-            return safe_json_loads(response, {})
+            response = await self.api_manager.scene_provider.chat(prompt)
+            text = response.text if hasattr(response, 'text') else str(response)
+            return safe_json_loads(text, {})
         except Exception as e:
             logging.error(f"Memory extraction failed: {e}")
             return None
@@ -421,26 +422,26 @@ Return empty arrays if nothing significant.'''
             full_context=context, user_input=user_input
         )
 
-        response = await self.api_manager.chat_client.chat(
+        response = await self.api_manager.chat_provider.chat(
             prompt=cot_prompt,
-            temperature=self.settings.TEMPERATURE,
-            max_tokens=self.settings.MAX_TOKENS,
+            config=None,  # Uses default config
         )
+        response_text = response.text if hasattr(response, 'text') else str(response)
 
         match = re.search(
-            r"<final_response>(.*?)</final_response>", response, re.DOTALL
+            r"<final_response>(.*?)</final_response>", response_text, re.DOTALL
         )
         if match:
             return match.group(1).strip()
 
-        if "<final_response>" in response:
+        if "<final_response>" in response_text:
             return (
-                response.split("<final_response>")[-1]
+                response_text.split("<final_response>")[-1]
                 .replace("</final_response>", "")
                 .strip()
             )
 
-        return response.strip()
+        return response_text.strip()
 
     async def get_response(self, user_input: str) -> str:
         try:

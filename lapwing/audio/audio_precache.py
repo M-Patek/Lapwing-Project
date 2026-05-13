@@ -10,8 +10,6 @@ from typing import List, Dict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from tts_client import LapwingTTS, EmotionPreset
-
 
 @dataclass
 class PreCacheConfig:
@@ -72,12 +70,13 @@ class AudioPreCache:
     Pre-caches common TTS phrases to reduce latency.
 
     Usage:
+        from lapwing.audio.tts_client import LapwingTTS, EmotionPreset
         cache = AudioPreCache(tts_client)
         await cache.initialize()  # Pre-generate all phrases
         await cache.warm_up()      # Ensure cache is ready
     """
 
-    def __init__(self, tts_client: LapwingTTS, config: PreCacheConfig = None):
+    def __init__(self, tts_client, config: PreCacheConfig = None):
         self.tts = tts_client
         self.config = config or PreCacheConfig()
         self._cache_status: Dict[str, datetime] = {}  # path -> last_accessed
@@ -109,6 +108,7 @@ class AudioPreCache:
                 try:
                     # Map emotion string to preset
                     try:
+                        from lapwing.audio.tts_client import EmotionPreset
                         preset = EmotionPreset(emotion)
                     except ValueError:
                         preset = EmotionPreset.NEUTRAL

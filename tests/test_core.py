@@ -12,13 +12,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import asyncio
 from datetime import datetime
 
-from main import EmotionalState
-from memory_weighted import (
+from lapwing.core.main import EmotionalState
+from lapwing.memory.memory_weighted import (
     TimeDecayCalculator,
     EmotionalWeightCalculator,
     WeightedMemory,
 )
-from event_bus import EventBus, EventType, Event
+from lapwing.systems.event_bus import EventBus, EventType, Event
 
 
 class TestEmotionalState:

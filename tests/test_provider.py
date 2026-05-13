@@ -6,13 +6,13 @@ Tests the abstract interface with different providers
 import asyncio
 from dotenv import load_dotenv
 
-from llm_provider import (
+from lapwing.api.llm_provider import (
     LLMProviderFactory,
     MultiProviderManager,
     LLMConfig,
     ProviderType,
 )
-from settings import Settings
+from lapwing.core.settings import Settings
 
 
 async def test_provider(provider_type: ProviderType, name: str):

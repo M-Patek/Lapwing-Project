@@ -293,33 +293,3 @@ async def emit_proactive_triggered(
         {"message": message, "intent_type": intent_type},
         source,
     )
-
-
-# Example usage
-if __name__ == "__main__":
-
-    async def main():
-        bus = get_event_bus()
-        await bus.start()
-
-        # Subscribe with decorator
-        @bus.on(EventType.EII_CHANGED)
-        async def on_eii_change(event: Event):
-            print(f"EII changed: {event.data['old_eii']} -> {event.data['new_eii']}")
-
-        # Subscribe with function
-        def on_memory(event: Event):
-            print(f"Memory: {event.data['content']}")
-
-        bus.subscribe(EventType.MEMORY_ADDED, on_memory)
-
-        # Publish events
-        await emit_eii_changed(50.0, 65.5)
-        await emit_memory_added("User likes cats", 60.0)
-
-        # Wait for processing
-        await asyncio.sleep(0.1)
-
-        await bus.stop()
-
-    asyncio.run(main())

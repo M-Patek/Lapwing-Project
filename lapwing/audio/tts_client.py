@@ -337,7 +337,7 @@ class LapwingTTS:
         self,
         text: str,
         eii: float = 50.0,
-        sentence_endings: tuple = ("。", "！", "？", ".", "!", "?"),
+        sentence_endings: tuple = (".", "！", "？", ".", "!", "?"),
     ) -> list[str]:
         """
         Split text into sentences and synthesize each.

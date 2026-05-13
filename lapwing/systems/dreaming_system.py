@@ -13,9 +13,9 @@ from pathlib import Path
 from enum import Enum, auto
 import json
 
-from settings import Settings
-from llm_provider import MultiProviderManager
-from utils import load_or_initialize_json, save_json, safe_json_loads
+from lapwing.core.settings import Settings
+from lapwing.api.llm_provider import MultiProviderManager
+from lapwing.utils.utils import load_or_initialize_json, save_json, safe_json_loads
 
 
 class DreamPhase(Enum):
@@ -61,6 +61,7 @@ class Reflection:
     triggered_by: Optional[str] = None
 
 
+@dataclass
 class DreamingConfig:
     """Dream system configuration"""
 
@@ -351,9 +352,10 @@ class DreamingSystem:
 
 用第一人称描述这些记忆在脑海中闪现的感觉。简短，诗意，像梦境一样模糊而流动。（50字以内）"""
 
-        response = await self.api_manager.chat_client.chat(prompt)
+        response = await self.api_manager.chat_provider.chat(prompt)
+        text = response.text if hasattr(response, 'text') else str(response)
         return {
-            "narrative": response.strip(),
+            "narrative": text.strip(),
             "memories": [m.get("id", str(i)) for i, m in enumerate(selected)],
         }
 
@@ -367,8 +369,9 @@ class DreamingSystem:
 
 用诗意的语言描述（50字以内）"""
 
-        response = await self.api_manager.chat_client.chat(prompt)
-        return {"narrative": response.strip(), "memories": []}
+        response = await self.api_manager.chat_provider.chat(prompt)
+        text = response.text if hasattr(response, 'text') else str(response)
+        return {"narrative": text.strip(), "memories": []}
 
     async def _dream_pattern_recognition(self, memories: List[Dict]) -> Dict[str, Any]:
         """Dream phase 3: Pattern recognition"""
@@ -380,8 +383,9 @@ class DreamingSystem:
 
 在梦中隐约发现了某种模式或联系。用一个隐喻描述这种隐约的感觉。（30字以内）"""
 
-        response = await self.api_manager.chat_client.chat(prompt)
-        return {"narrative": response.strip(), "memories": []}
+        response = await self.api_manager.chat_provider.chat(prompt)
+        text = response.text if hasattr(response, 'text') else str(response)
+        return {"narrative": text.strip(), "memories": []}
 
     async def _dream_insight_generation(
         self, memories: List[Dict], current_eii: float
@@ -405,8 +409,9 @@ class DreamingSystem:
     ]
 }}"""
 
-        response = await self.api_manager.scene_client.generate_content(prompt)
-        data = safe_json_loads(response, {})
+        response = await self.api_manager.scene_provider.chat(prompt)
+        text = response.text if hasattr(response, 'text') else str(response)
+        data = safe_json_loads(text, {})
 
         insights = []
         for i in data.get("insights", []):
@@ -454,8 +459,9 @@ class DreamingSystem:
 
 输出一个连贯的梦境场景。"""
 
-        response = await self.api_manager.chat_client.chat(prompt)
-        return {"narrative": response.strip(), "memories": []}
+        response = await self.api_manager.chat_provider.chat(prompt)
+        text = response.text if hasattr(response, 'text') else str(response)
+        return {"narrative": text.strip(), "memories": []}
 
     async def _calculate_aftermath(
         self, dream_content: str, current_eii: float
@@ -472,8 +478,9 @@ class DreamingSystem:
     "dominant_emotion": "主要情绪"
 }}"""
 
-        response = await self.api_manager.scene_client.generate_content(prompt)
-        data = safe_json_loads(response, {})
+        response = await self.api_manager.scene_provider.chat(prompt)
+        text = response.text if hasattr(response, 'text') else str(response)
+        data = safe_json_loads(text, {})
 
         return {
             "eii_delta": data.get("eii_change", 0.0),
@@ -496,11 +503,12 @@ class DreamingSystem:
 
 （100字以内）"""
 
-        response = await self.api_manager.chat_client.chat(prompt)
+        response = await self.api_manager.chat_provider.chat(prompt)
+        text = response.text if hasattr(response, 'text') else str(response)
 
         reflection = Reflection(
             topic=topic,
-            thoughts=response.strip(),
+            thoughts=text.strip(),
             timestamp=datetime.now(),
             triggered_by=context.get("trigger"),
         )

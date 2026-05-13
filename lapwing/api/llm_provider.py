@@ -9,8 +9,6 @@ from dataclasses import dataclass
 from enum import Enum, auto
 import logging
 
-from settings import Settings
-
 
 class ProviderType(Enum):
     """Supported LLM provider types"""
@@ -570,6 +568,8 @@ class MultiProviderManager:
 
     def _detect_providers(self):
         """Auto-detect provider types from available API keys"""
+        from lapwing.core.settings import Settings
+
         provider = self.settings.LLM_PROVIDER.lower()
 
         if provider == "anthropic" and self.settings.ANTHROPIC_API_KEY:

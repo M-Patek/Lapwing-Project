@@ -16,9 +16,9 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
-from main import Lapwing, setup_logging
-from tts_client import LapwingTTS, EmotionPreset
-from audio_manager import AudioManager
+from lapwing.core.main import Lapwing, setup_logging
+from lapwing.audio.tts_client import LapwingTTS, EmotionPreset
+from lapwing.audio.audio_manager import AudioManager
 
 # Load environment variables
 load_dotenv()
@@ -249,7 +249,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             await tts_instance.close()
             logging.info("TTS client closed")
 
-        if lapwing_instance and lapwing_instance.api_manager:
+        if lapwing_instance and hasattr(lapwing_instance, 'api_manager'):
             await lapwing_instance.api_manager.close()
             logging.info("API clients closed")
 
