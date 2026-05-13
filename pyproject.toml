@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "lapwing-project"
+version = "1.0.0"
+description = "Dedicated to simulating and implementing complex and genuine digital emotions."
+authors = ["Your Name you@example.com"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+anthropic = "^0.49.0"
+openai = "^1.0.0"  # For DeepSeek and OpenAI compatibility
+functions-framework = "*"
+python-dotenv = "*"
+pydantic-settings = "*"
+Jinja2 = "*"
+httpx = "*"
+faiss-cpu = "*"
+numpy = "*"
+fastapi = "*"
+uvicorn = {extras = ["standard"], version = "*"}
+tzdata = "^2025.2"
+tiktoken = "*"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+pytest-asyncio = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

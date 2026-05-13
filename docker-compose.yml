@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  lapwing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lapwing
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Persist data
+      - ./json:/app/json
+      - ./logs:/app/logs
+      - ./audio:/app/audio
+      # Prompts (read-only)
+      - ./prompts:/app/prompts:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    networks:
+      - lapwing-network
+
+  # Optional: Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: lapwing-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    networks:
+      - lapwing-network
+    profiles:
+      - full
+
+volumes:
+  redis-data:
+
+networks:
+  lapwing-network:
+    driver: bridge

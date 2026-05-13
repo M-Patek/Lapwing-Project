@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lapwing VTuber - 情感AI伴侣</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: transparent;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            -webkit-app-region: drag;
+        }
+        .header h1 {
+            color: white;
+            font-size: 1.5rem;
+        }
+        .status {
+            display: flex;
+            gap: 1rem;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+        }
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .chat-container {
+            flex: 1;
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .message {
+            max-width: 80%;
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+        .message.user {
+            align-self: flex-end;
+            background: #667eea;
+            color: white;
+        }
+        .message.assistant {
+            align-self: flex-start;
+            background: #f0f0f0;
+            color: #333;
+        }
+        .input-area {
+            display: flex;
+            gap: 0.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e0e0e0;
+        }
+        .input-area input {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .input-area button {
+            padding: 0.8rem 1.5rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .input-area button:hover {
+            background: #5a67d8;
+        }
+        .right-panel {
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .live2d-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            padding: 1.5rem;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .live2d-placeholder {
+            width: 300px;
+            height: 400px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 1.2rem;
+        }
+        .controls {
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .controls h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        .control-group {
+            margin-bottom: 1rem;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+        .control-group input[type="range"] {
+            width: 100%;
+        }
+        .mic-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #ff4757;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin: 1rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .mic-button:hover {
+            background: #ff3838;
+        }
+        .mic-button.recording {
+            background: #ff3838;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .info-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            padding: 1rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .info-panel h3 {
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        .eii-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🐦 Lapwing VTuber</h1>
+        <div class="status">
+            <div class="status-item">
+                <div class="status-dot" id="lapwing-status"></div>
+                <span>Lapwing API</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot" id="ws-status"></div>
+                <span>WebSocket</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message assistant">
+                        你好呀，Master！我是Lapwing，很高兴见到你～
+                    </div>
+                </div>
+                <div class="input-area">
+                    <input type="text" id="message-input" placeholder="输入消息..." />
+                    <button onclick="sendMessage()">发送</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="live2d-container">
+                <div class="live2d-placeholder">
+                    Live2D Model<br>(hiyori)
+                </div>
+                <button class="mic-button" id="mic-btn" onclick="toggleMic()">🎤</button>
+            </div>
+
+            <div class="info-panel">
+                <h3>情感状态 (EII)</h3>
+                <div class="eii-display" id="eii-display">53.00</div>
+            </div>
+
+            <div class="controls">
+                <h3>设置</h3>
+                <div class="control-group">
+                    <label>语音音量</label>
+                    <input type="range" min="0" max="100" value="80" />
+                </div>
+                <div class="control-group">
+                    <label>语音识别</label>
+                    <input type="range" min="0" max="100" value="50" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:12393/ws');
+        let isRecording = false;
+
+        ws.onopen = () => {
+            document.getElementById('ws-status').style.background = '#4CAF50';
+            console.log('WebSocket connected');
+        };
+
+        ws.onclose = () => {
+            document.getElementById('ws-status').style.background = '#f44336';
+            console.log('WebSocket disconnected');
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'assistant') {
+                addMessage(data.content, 'assistant');
+            }
+        };
+
+        function addMessage(text, role) {
+            const container = document.getElementById('chat-messages');
+            const msg = document.createElement('div');
+            msg.className = `message ${role}`;
+            msg.textContent = text;
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            input.value = '';
+
+            // Send via WebSocket
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'text',
+                    content: text
+                }));
+            }
+        }
+
+        function toggleMic() {
+            const btn = document.getElementById('mic-btn');
+            isRecording = !isRecording;
+            btn.classList.toggle('recording', isRecording);
+
+            if (isRecording) {
+                // Start recording
+                console.log('Start recording...');
+            } else {
+                // Stop recording
+                console.log('Stop recording');
+            }
+        }
+
+        // Check Lapwing API status
+        async function checkLapwingStatus() {
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                if (response.ok) {
+                    document.getElementById('lapwing-status').style.background = '#4CAF50';
+                    const data = await response.json();
+                    if (data.eii) {
+                        document.getElementById('eii-display').textContent = data.eii.toFixed(2);
+                    }
+                } else {
+                    document.getElementById('lapwing-status').style.background = '#f44336';
+                }
+            } catch (e) {
+                document.getElementById('lapwing-status').style.background = '#f44336';
+            }
+        }
+
+        // Check status every 5 seconds
+        setInterval(checkLapwingStatus, 5000);
+        checkLapwingStatus();
+
+        // Enter key to send
+        document.getElementById('message-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>

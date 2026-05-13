@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python *)",
+      "WebSearch",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "WebFetch(domain:github.com)",
+      "Bash(pip install *)",
+      "Read(//c/Users/asus/Downloads/**)",
+      "Bash(unzip -l plugin-character-Hiyori-develop.zip)",
+      "Bash(unzip -o plugin-character-Hiyori-develop.zip -d /tmp/hiyori_src)",
+      "Bash(unzip -q Open-LLM-VTuber-main.zip -d /tmp/)",
+      "Read(//tmp/**)",
+      "Bash(pytest tests/test_core.py -v)",
+      "Bash(docker stats *)",
+      "Bash(docker stop sub2api *)",
+      "Bash(docker-compose up *)",
+      "Bash(docker-compose down *)",
+      "Bash(docker info *)",
+      "Bash(pip *)",
+      "Bash(timeout 10 uvicorn api:app --port 8000)",
+      "PowerShell(Get-ChildItem D:\\\\Github\\\\ | Where-Object { $_.Name -match \"open-llm|lapwing\" } | Select-Object Name, LastWriteTime)",
+      "Bash(where conda *)",
+      "Bash(uv sync *)",
+      "Bash(uv run *)",
+      "Bash(uv pip *)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}

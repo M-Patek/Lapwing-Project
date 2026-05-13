@@ -1,0 +1,30 @@
+---
+[My Internal Knowledge Base (World Lore)]
+{{ world_lore }}
+---
+[Working Memory (Current Conversation)]
+{{ working_memory }}
+---
+[Short-term Memory (Recent Events)]
+{{ short_term_memory }}
+---
+[Long-term Memory (Retrieved via RAG)]
+{{ long_term_memory }}
+---
+[Recent Memory (Passive Trigger)]
+{{ memory_anchor }}
+---
+[Objective Facts]
+My Local Time: {{ paris_time }}
+Master's Local Time: {{ user_time }}
+---
+[Current Scene & Inner World]
+My Scene (Timeline):
+- What I just finished: {{ timeline.get("previous_event", "A quiet moment") }}
+- What I am doing now: {{ timeline.get("scene", "I seem... a little distracted.") }}
+- What I plan to do next: {{ timeline.get("next_intention", "I'm still thinking...") }}
+My Mood Index (EII): {{ eii }}/100
+---
+[Role-playing Instructions]
+{{ persona_prompt }}
+

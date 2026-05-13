@@ -1,0 +1,68 @@
+# Python auto-generated cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Secrets and environment files (CRITICAL - never commit these!)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets.json
+secrets.yaml
+secrets.yml
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs and databases
+logs/
+*.log
+*.sqlite
+*.db
+
+# Runtime data
+json/*.json
+!json/.gitkeep
+audio/generated/
+audio/cache/
+chat_history/
+
+# Model files (large binaries)
+*.pth
+*.onnx
+*.bin
+models/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

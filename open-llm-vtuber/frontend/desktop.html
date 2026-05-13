@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lapwing Desktop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: transparent;
+            width: 400px;
+            height: 500px;
+            overflow: hidden;
+            user-select: none;
+        }
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.8rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            -webkit-app-region: drag;
+        }
+        .header h1 {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .header .status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+        }
+        .live2d-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #f5f7fa 0%, #e4e8ec 100%);
+            position: relative;
+        }
+        .live2d-model {
+            width: 300px;
+            height: 300px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><rect fill="%23f0f0f0" width="300" height="300"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="%23999" font-size="16">Live2D Model</text></svg>');
+            background-size: cover;
+            border-radius: 12px;
+        }
+        .controls {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .input-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .input-row input {
+            flex: 1;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .input-row button {
+            padding: 0.6rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .mic-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #ff4757;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        .mic-btn:hover {
+            transform: scale(1.05);
+        }
+        .mic-btn.recording {
+            background: #ff3838;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .eii-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .eii-value {
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header" id="header">
+            <h1>🐦 Lapwing</h1>
+            <div class="status" id="status-dot"></div>
+        </div>
+
+        <div class="live2d-area">
+            <div class="live2d-model" id="live2d-model">
+                <!-- Live2D canvas will be inserted here -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="eii-bar">
+                <span>EII:</span>
+                <span class="eii-value" id="eii-value">53.00</span>
+            </div>
+            <div class="input-row">
+                <input type="text" id="message-input" placeholder="输入消息..." />
+                <button onclick="sendMessage()">发送</button>
+            </div>
+            <button class="mic-btn" id="mic-btn" onclick="toggleMic()">🎤</button>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection
+        const ws = new WebSocket('ws://localhost:12393/ws');
+        let isRecording = false;
+
+        ws.onopen = () => {
+            document.getElementById('status-dot').style.background = '#4CAF50';
+        };
+
+        ws.onclose = () => {
+            document.getElementById('status-dot').style.background = '#f44336';
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'assistant') {
+                console.log('Lapwing:', data.content);
+            }
+        };
+
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'text',
+                    content: text
+                }));
+            }
+        }
+
+        function toggleMic() {
+            const btn = document.getElementById('mic-btn');
+            isRecording = !isRecording;
+            btn.classList.toggle('recording', isRecording);
+        }
+
+        // Check EII
+        async function checkEII() {
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.eii) {
+                        document.getElementById('eii-value').textContent = data.eii.toFixed(2);
+                    }
+                }
+            } catch (e) {}
+        }
+
+        setInterval(checkEII, 5000);
+        checkEII();
+
+        // Drag functionality
+        const header = document.getElementById('header');
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+
+        header.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+
+        function dragStart(e) {
+            initialX = e.clientX;
+            initialY = e.clientY;
+            isDragging = true;
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                // In a real desktop app, this would move the window
+            }
+        }
+
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+        }
+
+        // Enter key to send
+        document.getElementById('message-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>

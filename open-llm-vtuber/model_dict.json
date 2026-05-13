@@ -1,0 +1,55 @@
+[
+    {
+        "name": "mao_pro",
+        "description": "",
+        "url": "/live2d-models/mao_pro/runtime/mao_pro.model3.json",
+        "kScale": 0.5,
+        "initialXshift": 0,
+        "initialYshift": 0,
+        "kXOffset": 1150,
+        "idleMotionGroupName": "Idle",
+        "emotionMap": {
+            "neutral": 0,
+            "anger": 2,
+            "disgust": 2,
+            "fear": 1,
+            "joy": 3,
+            "smirk": 3,
+            "sadness": 1,
+            "surprise": 3
+        },
+        "tapMotions": {
+            "HitAreaHead": {
+                "": 1
+            },
+            "HitAreaBody": {
+                "": 1
+            }
+        }
+    },
+    {
+        "name": "hiyori",
+        "description": "Momose Hiyori - Live2D Sample Model",
+        "url": "/live2d-models/hiyori/Hiyori.model3.json",
+        "kScale": 0.35,
+        "initialXshift": 0,
+        "initialYshift": 0,
+        "kXOffset": 1150,
+        "idleMotionGroupName": "Idle",
+        "emotionMap": {
+            "neutral": 0,
+            "happy": 1,
+            "sad": 2,
+            "surprised": 3,
+            "excited": 4
+        },
+        "tapMotions": {
+            "HitAreaHead": {
+                "": 1
+            },
+            "HitAreaBody": {
+                "": 1
+            }
+        }
+    }
+]

@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  lapwing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lapwing-prod
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./json:/app/json
+      - ./logs:/app/logs
+      - ./audio:/app/audio
+      - ./prompts:/app/prompts:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - UVICORN_WORKERS=2
+    networks:
+      - lapwing-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  nginx:
+    image: nginx:alpine
+    container_name: lapwing-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - lapwing
+    networks:
+      - lapwing-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: lapwing-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    networks:
+      - lapwing-network
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: lapwing-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 3600 --cleanup
+    environment:
+      - WATCHTOWER_NOTIFICATIONS=email
+      - WATCHTOWER_NOTIFICATION_EMAIL_FROM=alert@example.com
+      - WATCHTOWER_NOTIFICATION_EMAIL_TO=admin@example.com
+
+volumes:
+  redis-data:
+
+networks:
+  lapwing-network:
+    driver: bridge

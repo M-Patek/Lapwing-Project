@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  gpt-sovits:
+    image: breakstring/gpt-sovits:latest
+    container_name: gpt-sovits
+    restart: unless-stopped
+
+    # GPU 支持
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+    ports:
+      # Web UI 端口
+      - "9874:9874"
+      # API 端口
+      - "9872:9872"
+
+    volumes:
+      # 预训练模型挂载
+      - ./models/pretrained:/app/models/pretrained:ro
+      # 训练的模型挂载
+      - ./models/trained:/app/models/trained
+      # 参考音频挂载
+      - ./reference:/app/reference:ro
+      # 输出目录
+      - ./output:/app/output
+      # 临时工作目录
+      - ./workspace:/app/workspace
+
+    environment:
+      # CUDA 设置
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CUDA_VISIBLE_DEVICES=0
+      # Python 环境
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+
+    command: >
+      python api_v2.py
+      --port 9872
+      --default_refer_path /app/reference/lapwing_default.wav
+      --default_refer_text "你好，我是 Lapwing。"
+      --default_refer_language zh
+
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9872/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    networks:
+      - lapwing-network
+
+networks:
+  lapwing-network:
+    driver: bridge

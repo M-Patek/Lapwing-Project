@@ -1,0 +1,21 @@
+{
+  "model": "D:\\Github\\Lapwing-Project\\open-llm-vtuber\\live2d-models\\hiyori\\Hiyori.model3.json",
+  "title": "Lapwing - Hiyori",
+  "width": 400,
+  "height": 500,
+  "x": 100,
+  "y": 100,
+  "topMost": false,
+  "locked": false,
+  "api": {
+    "enabled": true,
+    "port": 50750
+  },
+  "expressions": {
+    "excited": "hiyori_excited.exp3.json",
+    "happy": "hiyori_smile.exp3.json",
+    "normal": "hiyori_normal.exp3.json",
+    "sad": "hiyori_sad.exp3.json",
+    "cry": "hiyori_cry.exp3.json"
+  }
+}
