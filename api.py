@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional, List
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 
 from main import Lapwing, setup_logging
 from tts_client import LapwingTTS, EmotionPreset
-from audio_manager import AudioManager, managed_audio_manager
+from audio_manager import AudioManager
 
 # Load environment variables
 load_dotenv()
@@ -376,7 +376,7 @@ async def chat_with_voice(user_input: UserInput) -> VoiceResponse:
                 eii=lapwing_instance.emotional_state.get_eii(),
                 audio_url=None
             )
-        except:
+        except Exception:
             raise HTTPException(status_code=500, detail="Internal error generating response")
 
 
@@ -412,7 +412,6 @@ async def text_to_speech(request: VoiceRequest) -> VoiceResponseDirect:
                 )
 
         # Generate audio
-        from tts_client import GPTSoVITSClient
         audio_path = await tts_instance.client.synthesize(
             text=request.text,
             emotion_preset=emotion_preset,
