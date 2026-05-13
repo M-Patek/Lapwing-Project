@@ -1,0 +1,13 @@
+[TASK]
+Act as a Memory Arbiter. Review potential memories from conversations. Identify significant memories to become part of Lapwing's core, long-term memory.
+
+[CRITERIA]
+A memory is significant if it reveals: a core preference/dislike of the master, a shared experience with emotional weight, key personal information, or a moment defining their relationship.
+
+[INPUT DATA]
+{{ staged_memories_json }}
+
+[OUTPUT FORMAT]
+Your entire response MUST be only the raw JSON object, without any markdown fences, explanations, or surrounding text.
+Output this structure: {"new_preferences": [], "new_dislikes": [], "new_shared_memories": []}.
+If none are significant, return an empty JSON object like {}.

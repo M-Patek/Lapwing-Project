@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lapwing Chat</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000000; /* Black background */
+            color: #e0e0e0; /* Light gray text for readability */
+        }
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #121212; /* Dark gray for the app area */
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+        }
+        #chat-window {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #input-area {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #333; /* Darker border */
+            background-color: #1a1a1a;
+        }
+        #user-input {
+            flex-grow: 1;
+            border: 1px solid #444;
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 16px;
+            background-color: #252525;
+            color: #e0e0e0;
+        }
+        #send-btn {
+            background-color: #6a4c9c; /* Muted purple */
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #send-btn:hover {
+            background-color: #8367b7; /* Lighter purple on hover */
+        }
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+        .user-msg {
+            background-color: #3e3e5a; /* Dark blue-purple for user */
+            align-self: flex-end;
+            color: #ffffff;
+        }
+        .lapwing-msg {
+            background-color: #2a2a3a; /* Dark purple-gray for Lapwing */
+            align-self: flex-start;
+        }
+        .typing-indicator {
+            font-size: 0.85em; /* Smaller font size */
+            color: #aaa; /* Lighter color */
+            align-self: flex-start; /* Align with Lapwing's messages */
+            margin-left: 15px; /* Indent slightly */
+        }
+        .action {
+            font-style: italic;
+            color: #a795c1; /* Lighter, muted purple for actions */
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="chat-window">
+            </div>
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        function renderMessage(sender, text) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', sender === 'user' ? 'user-msg' : 'lapwing-msg');
+            let formattedText = text.replace(/\n/g, '<br>');
+            formattedText = formattedText.replace(/\((.*?)\)/g, '<span class="action">($1)</span>');
+            messageElement.innerHTML = formattedText;
+            chatWindow.appendChild(messageElement);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            return messageElement;
+        }
+
+        function showTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.classList.add('typing-indicator');
+            indicator.textContent = 'Lapwing is typing...';
+            indicator.id = 'typing-indicator';
+            chatWindow.appendChild(indicator);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            return indicator;
+        }
+
+        // Step 6: Implement Fade-in Effect
+        function typeWriterEffect(element, text, callback) {
+            let i = 0;
+            const speed = 30; // ms per character
+            element.innerHTML = ""; // Clear the element first
+
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i) === '\n' ? '<br>' : text.charAt(i);
+                    i++;
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                    setTimeout(type, speed);
+                } else if (callback) {
+                    callback();
+                }
+            }
+            type();
+        }
+
+        // Step 7: Action and Emoticon Formatting
+        function formatActionTags(element) {
+            element.innerHTML = element.innerHTML.replace(/\((.*?)\)/g, '<span class="action">($1)</span>');
+        }
+
+        async function handleChatAPI(message) {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.body;
+            } catch (error) {
+                console.error("API Error:", error);
+                return "Sorry, I'm having a little trouble connecting...";
+            }
+        }
+
+        async function sendMessage() {
+            const messageText = userInput.value.trim();
+            if (messageText === '') return;
+
+            renderMessage('user', messageText);
+            userInput.value = '';
+
+            const typingIndicator = showTypingIndicator();
+            const responseStream = await handleChatAPI(messageText);
+
+            // Step 4: Receive Stream Data & clear indicator
+            if (typingIndicator) chatWindow.removeChild(typingIndicator);
+
+            const lapwingMessageElement = renderMessage('lapwing', ''); // Create an empty message container
+
+            // Step 5: Accumulate Response Content
+            const reader = responseStream.getReader();
+            const decoder = new TextDecoder();
+            let fullText = "";
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                fullText += decoder.decode(value, { stream: true });
+            }
+
+            // Step 6 & 7 combined
+            typeWriterEffect(lapwingMessageElement, fullText, () => formatActionTags(lapwingMessageElement));
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        window.addEventListener('load', async () => {
+            renderMessage('lapwing', "Waking Lapwing's soul...");
+            const responseStream = await handleChatAPI(""); // Get initial state
+            chatWindow.removeChild(chatWindow.lastChild); // Remove loading message
+
+            const reader = responseStream.getReader();
+            const decoder = new TextDecoder();
+            let fullText = "";
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                fullText += decoder.decode(value, { stream: true });
+            }
+            const initialMessageElement = renderMessage('lapwing', '');
+            typeWriterEffect(initialMessageElement, fullText, () => formatActionTags(initialMessageElement));
+        });
+    </script>
+</body>
+</html>
