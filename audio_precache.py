@@ -2,6 +2,7 @@
 Audio Pre-caching System
 Pre-generates common phrases to reduce latency.
 """
+
 import asyncio
 import logging
 from pathlib import Path
@@ -15,6 +16,7 @@ from tts_client import LapwingTTS, EmotionPreset
 @dataclass
 class PreCacheConfig:
     """Configuration for pre-caching"""
+
     # Common phrases to pre-cache
     greetings: List[str] = None
     farewells: List[str] = None
@@ -91,8 +93,12 @@ class AudioPreCache:
 
         # Collect all phrases
         all_phrases = []
-        for category in [self.config.greetings, self.config.farewells,
-                        self.config.affirmations, self.config.thinking_phrases]:
+        for category in [
+            self.config.greetings,
+            self.config.farewells,
+            self.config.affirmations,
+            self.config.thinking_phrases,
+        ]:
             all_phrases.extend(category)
 
         # Generate with rate limiting
@@ -109,9 +115,7 @@ class AudioPreCache:
 
                     # Generate audio
                     path = await self.tts.client.synthesize(
-                        text=phrase,
-                        emotion_preset=preset,
-                        use_cache=True
+                        text=phrase, emotion_preset=preset, use_cache=True
                     )
 
                     self._cache_status[str(path)] = datetime.now()
@@ -144,7 +148,9 @@ class AudioPreCache:
         """Get cache statistics"""
         return {
             "cached_files": len(self._cache_status),
-            "last_preload": max(self._cache_status.values()) if self._cache_status else None,
+            "last_preload": max(self._cache_status.values())
+            if self._cache_status
+            else None,
             "is_preloading": self._preloading,
         }
 
@@ -154,7 +160,8 @@ class AudioPreCache:
         now = datetime.now()
 
         expired = [
-            path for path, last_access in self._cache_status.items()
+            path
+            for path, last_access in self._cache_status.items()
             if now - last_access > expiry
         ]
 

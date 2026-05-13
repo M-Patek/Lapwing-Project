@@ -2,19 +2,22 @@
 Lapwing Desktop Application
 PyQt6 WebView wrapper for Live2D character
 """
+
 import sys
 import os
 from pathlib import Path
 
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout,
-    QSystemTrayIcon, QMenu
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QSystemTrayIcon,
+    QMenu,
 )
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWebChannel import QWebChannel
-from PyQt6.QtCore import (
-    Qt, QUrl, pyqtSignal, pyqtSlot, QObject
-)
+from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot, QObject
 from PyQt6.QtGui import QAction, QKeySequence, QShortcut
 
 
@@ -34,11 +37,10 @@ class LapwingBridge(QObject):
     def send_message(self, message: str) -> str:
         """Send message to Lapwing API and return response"""
         import requests
+
         try:
             response = requests.post(
-                f"{self.api_url}/chat",
-                json={"message": message},
-                timeout=30
+                f"{self.api_url}/chat", json={"message": message}, timeout=30
             )
             data = response.json()
             return data.get("reply", "...")
@@ -49,11 +51,10 @@ class LapwingBridge(QObject):
     def speak_with_voice(self, text: str, eii: float) -> str:
         """Get voice URL for text"""
         import requests
+
         try:
             response = requests.post(
-                f"{self.api_url}/tts",
-                json={"text": text, "eii": eii},
-                timeout=30
+                f"{self.api_url}/tts", json={"text": text, "eii": eii}, timeout=30
             )
             data = response.json()
             return data.get("audio_url", "")
@@ -64,6 +65,7 @@ class LapwingBridge(QObject):
     def get_status(self) -> str:
         """Get Lapwing status"""
         import requests
+
         try:
             response = requests.get(f"{self.api_url}/health", timeout=5)
             data = response.json()
@@ -82,9 +84,9 @@ class LapwingWindow(QMainWindow):
 
         # Frameless, transparent, always on top
         self.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint |
-            Qt.WindowType.WindowStaysOnTopHint |
-            Qt.WindowType.Tool
+            Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.WindowStaysOnTopHint
+            | Qt.WindowType.Tool
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
@@ -147,15 +149,11 @@ class LapwingWindow(QMainWindow):
     def setup_shortcuts(self):
         """Setup global shortcuts"""
         # Ctrl+Shift+S: Show/Hide
-        self.toggle_shortcut = QShortcut(
-            QKeySequence("Ctrl+Shift+S"), self
-        )
+        self.toggle_shortcut = QShortcut(QKeySequence("Ctrl+Shift+S"), self)
         self.toggle_shortcut.activated.connect(self.toggle_visibility)
 
         # Ctrl+Shift+Q: Quit
-        self.quit_shortcut = QShortcut(
-            QKeySequence("Ctrl+Shift+Q"), self
-        )
+        self.quit_shortcut = QShortcut(QKeySequence("Ctrl+Shift+Q"), self)
         self.quit_shortcut.activated.connect(self.quit)
 
     def on_tray_activated(self, reason):
@@ -181,7 +179,9 @@ class LapwingWindow(QMainWindow):
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             self.dragging = True
-            self.drag_position = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            self.drag_position = (
+                event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            )
             event.accept()
 
     def mouseMoveEvent(self, event):

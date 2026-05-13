@@ -2,6 +2,7 @@
 Entry point for memory consolidation.
 Run: python run_consolidation.py
 """
+
 import asyncio
 import sys
 from memory_consolidation import main

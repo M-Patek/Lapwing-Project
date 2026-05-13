@@ -2,6 +2,7 @@
 Structured Logging for Lapwing
 JSON-formatted logs for better analysis and monitoring.
 """
+
 import logging
 import sys
 from datetime import datetime
@@ -12,28 +13,33 @@ from pythonjsonlogger import jsonlogger
 class StructuredLogFormatter(jsonlogger.JsonFormatter):
     """Custom JSON formatter for structured logging"""
 
-    def add_fields(self, log_record: Dict[str, Any], record: logging.LogRecord, message_dict: Dict[str, Any]):
+    def add_fields(
+        self,
+        log_record: Dict[str, Any],
+        record: logging.LogRecord,
+        message_dict: Dict[str, Any],
+    ):
         super().add_fields(log_record, record, message_dict)
 
         # Add timestamp
-        log_record['timestamp'] = datetime.utcnow().isoformat()
+        log_record["timestamp"] = datetime.utcnow().isoformat()
 
         # Add log level
-        log_record['level'] = record.levelname
+        log_record["level"] = record.levelname
 
         # Add source
-        log_record['source'] = {
-            'file': record.filename,
-            'line': record.lineno,
-            'function': record.funcName,
+        log_record["source"] = {
+            "file": record.filename,
+            "line": record.lineno,
+            "function": record.funcName,
         }
 
         # Add service info
-        log_record['service'] = 'lapwing'
+        log_record["service"] = "lapwing"
 
         # Rename 'message' to 'msg' to avoid conflict
-        if 'message' in log_record:
-            log_record['msg'] = log_record.pop('message')
+        if "message" in log_record:
+            log_record["msg"] = log_record.pop("message")
 
 
 class LapwingLogger:
@@ -55,7 +61,7 @@ class LapwingLogger:
 
         # JSON formatter
         formatter = StructuredLogFormatter(
-            '%(timestamp)s %(level)s %(name)s %(message)s'
+            "%(timestamp)s %(level)s %(name)s %(message)s"
         )
 
         # Console handler
@@ -68,10 +74,7 @@ class LapwingLogger:
         extra = extra or {}
 
         # Add context
-        log_data = {
-            "event": message,
-            **extra
-        }
+        log_data = {"event": message, **extra}
 
         getattr(self.logger, level)(message, extra=log_data)
 
@@ -106,6 +109,7 @@ def get_logger() -> LapwingLogger:
 
 # Structured logging helpers
 
+
 def log_api_request(method: str, path: str, latency: float, status: int, **kwargs):
     """Log API request"""
     get_logger().info(
@@ -114,11 +118,13 @@ def log_api_request(method: str, path: str, latency: float, status: int, **kwarg
         path=path,
         latency_ms=round(latency * 1000, 2),
         status=status,
-        **kwargs
+        **kwargs,
     )
 
 
-def log_llm_call(provider: str, model: str, latency: float, tokens_in: int, tokens_out: int, **kwargs):
+def log_llm_call(
+    provider: str, model: str, latency: float, tokens_in: int, tokens_out: int, **kwargs
+):
     """Log LLM API call"""
     get_logger().info(
         "llm_call",
@@ -127,17 +133,14 @@ def log_llm_call(provider: str, model: str, latency: float, tokens_in: int, toke
         latency_ms=round(latency * 1000, 2),
         tokens_in=tokens_in,
         tokens_out=tokens_out,
-        **kwargs
+        **kwargs,
     )
 
 
 def log_memory_operation(operation: str, memory_id: str, **kwargs):
     """Log memory operation"""
     get_logger().info(
-        "memory_operation",
-        operation=operation,
-        memory_id=memory_id,
-        **kwargs
+        "memory_operation", operation=operation, memory_id=memory_id, **kwargs
     )
 
 
@@ -149,7 +152,7 @@ def log_emotion_change(old_eii: float, new_eii: float, trigger: str, **kwargs):
         new_eii=new_eii,
         delta=round(new_eii - old_eii, 2),
         trigger=trigger,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -160,7 +163,7 @@ def log_proactive_trigger(intent_type: str, message: str, boredom: float, **kwar
         intent_type=intent_type,
         message_preview=message[:50],
         boredom=round(boredom, 2),
-        **kwargs
+        **kwargs,
     )
 
 

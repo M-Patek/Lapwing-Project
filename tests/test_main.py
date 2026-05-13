@@ -2,6 +2,7 @@
 Tests for Lapwing core functionality.
 Run with: pytest tests/test_main.py -v
 """
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
@@ -75,7 +76,7 @@ class TestLapwing:
         mock_settings.PARIS_TZ = None
 
         # Patch Settings constructor
-        monkeypatch.setattr('main.Settings', lambda: mock_settings)
+        monkeypatch.setattr("main.Settings", lambda: mock_settings)
 
         # Mock API manager
         mock_api_manager = MagicMock()
@@ -84,23 +85,31 @@ class TestLapwing:
         mock_api_manager.embedding_client = AsyncMock()
 
         # Patch ApiClientManager
-        monkeypatch.setattr('main.ApiClientManager', lambda s: mock_api_manager)
+        monkeypatch.setattr("main.ApiClientManager", lambda s: mock_api_manager)
 
         # Mock MemoryManager
         mock_memory = MagicMock()
         mock_memory.working_memory = []
-        mock_memory.get_formatted_working_memory = MagicMock(return_value="Test working memory")
-        mock_memory.get_formatted_short_term_memory = MagicMock(return_value="Test short term")
-        mock_memory.retrieve_long_term_memories = AsyncMock(return_value="Test long term")
+        mock_memory.get_formatted_working_memory = MagicMock(
+            return_value="Test working memory"
+        )
+        mock_memory.get_formatted_short_term_memory = MagicMock(
+            return_value="Test short term"
+        )
+        mock_memory.retrieve_long_term_memories = AsyncMock(
+            return_value="Test long term"
+        )
         mock_memory.retrieve_style_exemplars = AsyncMock(return_value=[])
         mock_memory.build_style_index_async = AsyncMock()
 
-        monkeypatch.setattr('main.MemoryManager', lambda *args, **kwargs: mock_memory)
+        monkeypatch.setattr("main.MemoryManager", lambda *args, **kwargs: mock_memory)
 
         # Mock file operations
-        monkeypatch.setattr('main.load_or_initialize_json', lambda *args: {})
-        monkeypatch.setattr('main.Path.exists', lambda self: True)
-        monkeypatch.setattr('main.Path.read_text', lambda *args, **kwargs: "Test content")
+        monkeypatch.setattr("main.load_or_initialize_json", lambda *args: {})
+        monkeypatch.setattr("main.Path.exists", lambda self: True)
+        monkeypatch.setattr(
+            "main.Path.read_text", lambda *args, **kwargs: "Test content"
+        )
 
         # Create instance
         lapwing = Lapwing()
@@ -143,7 +152,9 @@ class TestLapwing:
         lapwing, api_manager, _ = mock_lapwing
 
         # Mock API failure
-        api_manager.scene_client.generate_content = AsyncMock(side_effect=Exception("API error"))
+        api_manager.scene_client.generate_content = AsyncMock(
+            side_effect=Exception("API error")
+        )
 
         impact = await lapwing._analyze_emotional_impact("test")
         assert impact == 0  # Should return 0 on failure
@@ -155,12 +166,14 @@ class TestUtils:
     def test_safe_json_loads_valid(self):
         """Test parsing valid JSON."""
         from utils import safe_json_loads
+
         result = safe_json_loads('{"key": "value"}')
         assert result == {"key": "value"}
 
     def test_safe_json_loads_markdown(self):
         """Test parsing JSON in markdown."""
         from utils import safe_json_loads
+
         text = '```json\n{"key": "value"}\n```'
         result = safe_json_loads(text)
         assert result == {"key": "value"}
@@ -168,13 +181,15 @@ class TestUtils:
     def test_safe_json_loads_invalid(self):
         """Test invalid JSON returns default."""
         from utils import safe_json_loads
-        result = safe_json_loads('not json', default=[])
+
+        result = safe_json_loads("not json", default=[])
         assert result == []
 
     def test_safe_json_loads_custom_default(self):
         """Test custom default value."""
         from utils import safe_json_loads
-        result = safe_json_loads('invalid', default=None)
+
+        result = safe_json_loads("invalid", default=None)
         assert result is None
 
 

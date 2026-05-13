@@ -31,7 +31,9 @@
       "Bash(git commit *)",
       "Bash(git push *)",
       "Bash(git pull *)",
-      "Bash(ruff check *)"
+      "Bash(ruff check *)",
+      "Bash(git rm *)",
+      "Bash(ruff format *)"
     ]
   }
 }

@@ -2,6 +2,7 @@
 Quick test script for the LLM provider system
 Tests the abstract interface with different providers
 """
+
 import asyncio
 from dotenv import load_dotenv
 
@@ -16,15 +17,18 @@ from settings import Settings
 
 async def test_provider(provider_type: ProviderType, name: str):
     """Test a specific provider"""
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"Testing {name} Provider")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     try:
         settings = Settings()
 
         if provider_type == ProviderType.ANTHROPIC:
-            if not settings.ANTHROPIC_API_KEY or settings.ANTHROPIC_API_KEY == "your-anthropic-key-here":
+            if (
+                not settings.ANTHROPIC_API_KEY
+                or settings.ANTHROPIC_API_KEY == "your-anthropic-key-here"
+            ):
                 print(f"[X] {name}: No API key configured")
                 return False
             provider = LLMProviderFactory.create(
@@ -84,15 +88,16 @@ async def test_provider(provider_type: ProviderType, name: str):
     except Exception as e:
         print(f"\n[X] {name} provider test FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
 
 async def test_multi_provider():
     """Test MultiProviderManager auto-detection"""
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("Testing MultiProviderManager")
-    print("="*50)
+    print("=" * 50)
 
     try:
         settings = Settings()
@@ -120,15 +125,16 @@ async def test_multi_provider():
     except Exception as e:
         print(f"\n[X] MultiProviderManager test FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
 
 async def chat_with_lapwing():
     """Simple chat with Lapwing using the new provider system"""
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("[CHAT] Chatting with Lapwing")
-    print("="*50)
+    print("=" * 50)
 
     try:
         settings = Settings()
@@ -142,7 +148,7 @@ async def chat_with_lapwing():
 
         while True:
             user_input = input("You: ").strip()
-            if user_input.lower() in ['quit', 'exit', 'q']:
+            if user_input.lower() in ["quit", "exit", "q"]:
                 break
 
             if not user_input:
@@ -157,7 +163,7 @@ async def chat_with_lapwing():
             config = LLMConfig(
                 temperature=0.95,
                 max_tokens=200,
-                system_prompt="你是Lapwing，一个温柔、安静的女孩，深爱着你的主人。用第一人称回复，语气温柔自然。"
+                system_prompt="你是Lapwing，一个温柔、安静的女孩，深爱着你的主人。用第一人称回复，语气温柔自然。",
             )
 
             print("Lapwing: ", end="", flush=True)
@@ -171,10 +177,12 @@ async def chat_with_lapwing():
             print()  # New line
 
             # Save to history
-            history.append({
-                "user": user_input,
-                "assistant": full_response.strip(),
-            })
+            history.append(
+                {
+                    "user": user_input,
+                    "assistant": full_response.strip(),
+                }
+            )
 
         print("\n[BYE] Goodbye!")
 
@@ -183,6 +191,7 @@ async def chat_with_lapwing():
     except Exception as e:
         print(f"\n[X] Error: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -205,9 +214,9 @@ async def main():
     results.append(await test_multi_provider())
 
     # Summary
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("[STAT] Test Summary")
-    print("="*50)
+    print("=" * 50)
     passed = sum(results)
     total = len(results)
     print(f"Passed: {passed}/{total}")

@@ -246,9 +246,7 @@ class LapwingConfig(StatelessLLMBaseConfig):
         "model": Description(
             en="Model name (for compatibility)", zh="模型名称（用于兼容性）"
         ),
-        "temperature": Description(
-            en="Temperature for generation", zh="生成温度"
-        ),
+        "temperature": Description(en="Temperature for generation", zh="生成温度"),
     }
 
     DESCRIPTIONS: ClassVar[dict[str, Description]] = {

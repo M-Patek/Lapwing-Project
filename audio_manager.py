@@ -2,6 +2,7 @@
 Audio Manager for TTS file handling
 Provides file storage, cleanup, and static file serving configuration.
 """
+
 import asyncio
 import logging
 from pathlib import Path
@@ -15,6 +16,7 @@ import aiofiles
 @dataclass
 class AudioStats:
     """Statistics about audio storage."""
+
     total_files: int
     total_size_mb: float
     cached_files: int
@@ -46,7 +48,7 @@ class AudioManager:
         base_dir: Path = Path("audio"),
         max_cache_age_days: int = 7,
         max_generated_age_hours: int = 24,
-        cleanup_interval_hours: int = 6
+        cleanup_interval_hours: int = 6,
     ):
         self.base_dir = Path(base_dir)
         self.generated_dir = self.base_dir / "generated"
@@ -74,8 +76,7 @@ class AudioManager:
         """Start periodic cleanup task."""
         if self._cleanup_task is None or self._cleanup_task.done():
             self._cleanup_task = asyncio.create_task(
-                self._cleanup_loop(),
-                name="audio_cleanup"
+                self._cleanup_loop(), name="audio_cleanup"
             )
             logging.info("Started audio cleanup task")
 
@@ -107,20 +108,14 @@ class AudioManager:
         Returns:
             Cleanup statistics
         """
-        stats = {
-            "cache_deleted": 0,
-            "generated_deleted": 0,
-            "errors": []
-        }
+        stats = {"cache_deleted": 0, "generated_deleted": 0, "errors": []}
 
         now = datetime.now()
 
         # Clean cache files older than max_cache_age_days
         try:
             cache_deleted = await self._cleanup_directory(
-                self.cache_dir,
-                timedelta(days=self.max_cache_age_days),
-                now
+                self.cache_dir, timedelta(days=self.max_cache_age_days), now
             )
             stats["cache_deleted"] = cache_deleted
         except Exception as e:
@@ -129,8 +124,7 @@ class AudioManager:
         # Clean non-cache generated files older than max_generated_age_hours
         try:
             generated_deleted = await self._cleanup_generated(
-                timedelta(hours=self.max_generated_age_hours),
-                now
+                timedelta(hours=self.max_generated_age_hours), now
             )
             stats["generated_deleted"] = generated_deleted
         except Exception as e:
@@ -145,10 +139,7 @@ class AudioManager:
         return stats
 
     async def _cleanup_directory(
-        self,
-        directory: Path,
-        max_age: timedelta,
-        now: datetime
+        self, directory: Path, max_age: timedelta, now: datetime
     ) -> int:
         """Clean up files in directory older than max_age."""
         deleted = 0
@@ -179,11 +170,7 @@ class AudioManager:
 
         return deleted
 
-    async def _cleanup_generated(
-        self,
-        max_age: timedelta,
-        now: datetime
-    ) -> int:
+    async def _cleanup_generated(self, max_age: timedelta, now: datetime) -> int:
         """Clean up non-cache generated files."""
         deleted = 0
 
@@ -229,7 +216,7 @@ class AudioManager:
     async def save_generated(self, filename: str, data: bytes) -> Path:
         """Save a generated audio file."""
         path = self.get_generated_path(filename)
-        async with aiofiles.open(path, 'wb') as f:
+        async with aiofiles.open(path, "wb") as f:
             await f.write(data)
         return path
 
@@ -276,7 +263,7 @@ class AudioManager:
             cached_files=cached,
             generated_files=generated,
             oldest_file=oldest,
-            newest_file=newest
+            newest_file=newest,
         )
 
     async def clear_cache(self) -> int:
@@ -303,7 +290,7 @@ class AudioManager:
         return {
             "directory": str(self.base_dir),
             "path": "/audio",
-            "name": "audio_files"
+            "name": "audio_files",
         }
 
 

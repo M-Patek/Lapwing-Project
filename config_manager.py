@@ -2,6 +2,7 @@
 Configuration Hot Reload System
 Monitors config files and reloads without restart.
 """
+
 import asyncio
 import logging
 from pathlib import Path
@@ -19,6 +20,7 @@ from settings import Settings
 @dataclass
 class ConfigChange:
     """Represents a configuration change"""
+
     file_path: Path
     old_value: Any
     new_value: Any
@@ -151,7 +153,10 @@ class ConfigManager:
         # Debounce: ignore rapid successive changes
         now = datetime.now()
         last_change = self._last_reload.get(file_path)
-        if last_change and (now - last_change).total_seconds() < self._reload_debounce_seconds:
+        if (
+            last_change
+            and (now - last_change).total_seconds() < self._reload_debounce_seconds
+        ):
             return
 
         self._last_reload[file_path] = now
@@ -189,24 +194,28 @@ class ConfigManager:
         load_dotenv(str(file_path), override=True)
 
         # Update current config
-        self._current_config.update({
-            "LLM_PROVIDER": os.getenv("LLM_PROVIDER", self.settings.LLM_PROVIDER),
-            "CHAT_MODEL": os.getenv("CHAT_MODEL", self.settings.CHAT_MODEL),
-            "SCENE_MODEL": os.getenv("SCENE_MODEL", self.settings.SCENE_MODEL),
-            "TEMPERATURE": float(os.getenv("TEMPERATURE", self.settings.TEMPERATURE)),
-            "MAX_TOKENS": int(os.getenv("MAX_TOKENS", self.settings.MAX_TOKENS)),
-        })
+        self._current_config.update(
+            {
+                "LLM_PROVIDER": os.getenv("LLM_PROVIDER", self.settings.LLM_PROVIDER),
+                "CHAT_MODEL": os.getenv("CHAT_MODEL", self.settings.CHAT_MODEL),
+                "SCENE_MODEL": os.getenv("SCENE_MODEL", self.settings.SCENE_MODEL),
+                "TEMPERATURE": float(
+                    os.getenv("TEMPERATURE", self.settings.TEMPERATURE)
+                ),
+                "MAX_TOKENS": int(os.getenv("MAX_TOKENS", self.settings.MAX_TOKENS)),
+            }
+        )
 
     async def _reload_from_yaml(self, file_path: Path):
         """Reload from YAML file"""
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
             if data:
                 self._current_config.update(data)
 
     async def _reload_from_json(self, file_path: Path):
         """Reload from JSON file"""
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
             self._current_config.update(data)
 
@@ -220,7 +229,7 @@ class ConfigManager:
                     file_path=Path(".env"),
                     old_value=old_value,
                     new_value=new_value,
-                    timestamp=datetime.now()
+                    timestamp=datetime.now(),
                 )
 
                 # Notify specific handlers
@@ -244,7 +253,9 @@ class ConfigManager:
                     except Exception as e:
                         logging.error(f"[ConfigManager] Global handler error: {e}")
 
-                logging.info(f"[ConfigManager] Changed {key}: {old_value} -> {new_value}")
+                logging.info(
+                    f"[ConfigManager] Changed {key}: {old_value} -> {new_value}"
+                )
 
     def validate(self) -> List[str]:
         """Validate current configuration"""
@@ -284,6 +295,7 @@ def get_config_manager(settings: Optional[Settings] = None) -> ConfigManager:
 
 # Example usage
 if __name__ == "__main__":
+
     async def main():
         settings = Settings()
         config = get_config_manager(settings)

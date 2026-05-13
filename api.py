@@ -2,6 +2,7 @@
 FastAPI Entry Point for Lapwing with Voice Support
 Provides REST API and WebSocket endpoints for chatting with Lapwing.
 """
+
 import asyncio
 import logging
 from contextlib import asynccontextmanager
@@ -31,6 +32,7 @@ Path("json").mkdir(exist_ok=True)
 lapwing_instance: Optional[Lapwing] = None
 tts_instance: Optional[LapwingTTS] = None
 audio_manager: Optional[AudioManager] = None
+
 
 # WebSocket connection manager
 class ConnectionManager:
@@ -79,32 +81,51 @@ manager = ConnectionManager()
 # Request/Response Models
 # ============================================================================
 
+
 class UserInput(BaseModel):
     """User input model."""
-    message: str = Field(..., min_length=0, max_length=10000, description="User's message to Lapwing")
+
+    message: str = Field(
+        ..., min_length=0, max_length=10000, description="User's message to Lapwing"
+    )
 
 
 class LapwingResponse(BaseModel):
     """Lapwing text response model."""
+
     reply: str = Field(..., description="Lapwing's response text")
-    eii: Optional[float] = Field(None, description="Current emotional intensity index (0-100)")
+    eii: Optional[float] = Field(
+        None, description="Current emotional intensity index (0-100)"
+    )
 
 
 class VoiceResponse(LapwingResponse):
     """Lapwing response with voice."""
+
     audio_url: Optional[str] = Field(None, description="URL to generated audio file")
 
 
 class VoiceRequest(BaseModel):
     """Direct TTS request."""
-    text: str = Field(..., min_length=1, max_length=5000, description="Text to synthesize")
-    eii: Optional[float] = Field(None, ge=0, le=100, description="EII value (0-100). Auto-detects emotion if not provided.")
-    emotion: Optional[str] = Field(None, description="Override emotion: sad, calm, neutral, happy, excited")
+
+    text: str = Field(
+        ..., min_length=1, max_length=5000, description="Text to synthesize"
+    )
+    eii: Optional[float] = Field(
+        None,
+        ge=0,
+        le=100,
+        description="EII value (0-100). Auto-detects emotion if not provided.",
+    )
+    emotion: Optional[str] = Field(
+        None, description="Override emotion: sad, calm, neutral, happy, excited"
+    )
     use_cache: bool = Field(True, description="Use cached audio if available")
 
 
 class VoiceResponseDirect(BaseModel):
     """Direct TTS response."""
+
     audio_url: str = Field(..., description="URL to audio file")
     emotion_used: str = Field(..., description="Emotion preset used")
     cached: bool = Field(..., description="Whether audio was cached")
@@ -112,6 +133,7 @@ class VoiceResponseDirect(BaseModel):
 
 class StatsResponse(BaseModel):
     """Statistics response model."""
+
     emotional_state: dict
     memory: dict
     proactive: dict
@@ -121,6 +143,7 @@ class StatsResponse(BaseModel):
 
 class AudioStatsResponse(BaseModel):
     """Audio storage statistics."""
+
     total_files: int
     total_size_mb: float
     cached_files: int
@@ -129,12 +152,14 @@ class AudioStatsResponse(BaseModel):
 
 class GoalRequest(BaseModel):
     """Create goal request."""
+
     description: str = Field(..., min_length=1, max_length=500)
     priority: int = Field(5, ge=1, le=10)
 
 
 class GoalResponse(BaseModel):
     """Goal response."""
+
     goals: List[dict]
     total_active: int
     total_completed: int
@@ -142,6 +167,7 @@ class GoalResponse(BaseModel):
 
 class ProactiveStatusResponse(BaseModel):
     """Proactive system status."""
+
     boredom: float
     state: str
     minutes_since_interaction: float
@@ -151,12 +177,14 @@ class ProactiveStatusResponse(BaseModel):
 
 class DreamsResponse(BaseModel):
     """Recent dreams."""
+
     dreams: List[dict]
     total: int
 
 
 class InsightsResponse(BaseModel):
     """Generated insights."""
+
     insights: List[dict]
     total: int
 
@@ -164,6 +192,7 @@ class InsightsResponse(BaseModel):
 # ============================================================================
 # Lifespan Management
 # ============================================================================
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
@@ -239,7 +268,7 @@ app = FastAPI(
     title="Lapwing API",
     description="AI character with emotional intelligence, memory, and voice",
     version="2.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS middleware (restrict in production)
@@ -259,6 +288,7 @@ app.mount("/audio", StaticFiles(directory="audio"), name="audio_files")
 # Health & Stats Endpoints
 # ============================================================================
 
+
 @app.get("/health", summary="Health check")
 async def health_check() -> dict:
     """Check if the API is healthy."""
@@ -274,7 +304,7 @@ async def health_check() -> dict:
     return {
         "status": "healthy",
         "eii": lapwing_instance.emotional_state.get_eii(),
-        "tts": tts_status
+        "tts": tts_status,
     }
 
 
@@ -295,7 +325,11 @@ async def get_stats() -> StatsResponse:
         raise HTTPException(status_code=500, detail="Internal error getting stats")
 
 
-@app.get("/audio/stats", response_model=AudioStatsResponse, summary="Get audio storage statistics")
+@app.get(
+    "/audio/stats",
+    response_model=AudioStatsResponse,
+    summary="Get audio storage statistics",
+)
 async def get_audio_stats() -> AudioStatsResponse:
     """Get audio file storage statistics."""
     if audio_manager is None:
@@ -306,7 +340,7 @@ async def get_audio_stats() -> AudioStatsResponse:
         total_files=stats.total_files,
         total_size_mb=round(stats.total_size_mb, 2),
         cached_files=stats.cached_files,
-        generated_files=stats.generated_files
+        generated_files=stats.generated_files,
     )
 
 
@@ -314,7 +348,10 @@ async def get_audio_stats() -> AudioStatsResponse:
 # Chat Endpoints
 # ============================================================================
 
-@app.post("/chat", response_model=LapwingResponse, summary="Chat with Lapwing (text only)")
+
+@app.post(
+    "/chat", response_model=LapwingResponse, summary="Chat with Lapwing (text only)"
+)
 async def chat_with_lapwing(user_input: UserInput) -> LapwingResponse:
     """
     Send a message to Lapwing and get her text response.
@@ -328,15 +365,20 @@ async def chat_with_lapwing(user_input: UserInput) -> LapwingResponse:
     try:
         response_text = await lapwing_instance.get_response(user_input.message)
         return LapwingResponse(
-            reply=response_text,
-            eii=lapwing_instance.emotional_state.get_eii()
+            reply=response_text, eii=lapwing_instance.emotional_state.get_eii()
         )
     except Exception as e:
         logging.error(f"Chat error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal error generating response")
+        raise HTTPException(
+            status_code=500, detail="Internal error generating response"
+        )
 
 
-@app.post("/chat/voice", response_model=VoiceResponse, summary="Chat with Lapwing (with voice)")
+@app.post(
+    "/chat/voice",
+    response_model=VoiceResponse,
+    summary="Chat with Lapwing (with voice)",
+)
 async def chat_with_voice(user_input: UserInput) -> VoiceResponse:
     """
     Send a message to Lapwing and get her response with voice.
@@ -355,16 +397,10 @@ async def chat_with_voice(user_input: UserInput) -> VoiceResponse:
 
         # Generate voice based on emotional state
         audio_url = await tts_instance.speak(
-            text=response_text,
-            eii=current_eii,
-            use_cache=True
+            text=response_text, eii=current_eii, use_cache=True
         )
 
-        return VoiceResponse(
-            reply=response_text,
-            eii=current_eii,
-            audio_url=audio_url
-        )
+        return VoiceResponse(reply=response_text, eii=current_eii, audio_url=audio_url)
 
     except Exception as e:
         logging.error(f"Chat voice error: {e}", exc_info=True)
@@ -374,15 +410,18 @@ async def chat_with_voice(user_input: UserInput) -> VoiceResponse:
             return VoiceResponse(
                 reply=response_text,
                 eii=lapwing_instance.emotional_state.get_eii(),
-                audio_url=None
+                audio_url=None,
             )
         except Exception:
-            raise HTTPException(status_code=500, detail="Internal error generating response")
+            raise HTTPException(
+                status_code=500, detail="Internal error generating response"
+            )
 
 
 # ============================================================================
 # TTS Endpoints
 # ============================================================================
+
 
 @app.post("/tts", response_model=VoiceResponseDirect, summary="Text-to-speech")
 async def text_to_speech(request: VoiceRequest) -> VoiceResponseDirect:
@@ -408,7 +447,7 @@ async def text_to_speech(request: VoiceRequest) -> VoiceResponseDirect:
             except ValueError:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Invalid emotion: {request.emotion}. Use: sad, calm, neutral, happy, excited"
+                    detail=f"Invalid emotion: {request.emotion}. Use: sad, calm, neutral, happy, excited",
                 )
 
         # Generate audio
@@ -416,7 +455,7 @@ async def text_to_speech(request: VoiceRequest) -> VoiceResponseDirect:
             text=request.text,
             emotion_preset=emotion_preset,
             eii=request.eii,
-            use_cache=request.use_cache
+            use_cache=request.use_cache,
         )
 
         # Convert to URL
@@ -437,9 +476,7 @@ async def text_to_speech(request: VoiceRequest) -> VoiceResponseDirect:
         cached = False  # Will be True if cache hit
 
         return VoiceResponseDirect(
-            audio_url=audio_url,
-            emotion_used=emotion_used,
-            cached=cached
+            audio_url=audio_url, emotion_used=emotion_used, cached=cached
         )
 
     except HTTPException:
@@ -458,15 +495,16 @@ async def list_emotions() -> dict:
             {"name": "calm", "eii_range": "20-40", "description": "平静、思考"},
             {"name": "neutral", "eii_range": "40-60", "description": "温和、日常"},
             {"name": "happy", "eii_range": "60-80", "description": "开心、活泼"},
-            {"name": "excited", "eii_range": "80-100", "description": "激动、兴奋"}
+            {"name": "excited", "eii_range": "80-100", "description": "激动、兴奋"},
         ],
-        "note": "EII = Emotional Intensity Index. Can use 'eii' param or specific 'emotion' in TTS requests."
+        "note": "EII = Emotional Intensity Index. Can use 'eii' param or specific 'emotion' in TTS requests.",
     }
 
 
 # ============================================================================
 # Audio File Management
 # ============================================================================
+
 
 @app.get("/audio/{path:path}", summary="Serve audio files")
 async def serve_audio(path: str):
@@ -501,6 +539,7 @@ async def clear_audio_cache() -> dict:
 # WebSocket Endpoints
 # ============================================================================
 
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """
@@ -515,13 +554,15 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         # Send initial status
         if lapwing_instance:
-            await websocket.send_json({
-                "type": "status",
-                "data": {
-                    "eii": lapwing_instance.emotional_state.get_eii(),
-                    "connected": True
+            await websocket.send_json(
+                {
+                    "type": "status",
+                    "data": {
+                        "eii": lapwing_instance.emotional_state.get_eii(),
+                        "connected": True,
+                    },
                 }
-            })
+            )
 
         while True:
             # Wait for messages from client
@@ -533,13 +574,15 @@ async def websocket_endpoint(websocket: WebSocket):
                 user_message = data.get("message", "")
                 if user_message and lapwing_instance:
                     response = await lapwing_instance.get_response(user_message)
-                    await websocket.send_json({
-                        "type": "chat_response",
-                        "data": {
-                            "reply": response,
-                            "eii": lapwing_instance.emotional_state.get_eii()
+                    await websocket.send_json(
+                        {
+                            "type": "chat_response",
+                            "data": {
+                                "reply": response,
+                                "eii": lapwing_instance.emotional_state.get_eii(),
+                            },
                         }
-                    })
+                    )
 
             elif message_type == "ping":
                 await websocket.send_json({"type": "pong"})
@@ -553,32 +596,38 @@ async def websocket_endpoint(websocket: WebSocket):
 
 async def broadcast_proactive_message(message: str):
     """Broadcast proactive message to all WebSocket clients"""
-    await manager.broadcast({
-        "type": "proactive_message",
-        "data": {
-            "message": message,
-            "timestamp": asyncio.get_event_loop().time()
+    await manager.broadcast(
+        {
+            "type": "proactive_message",
+            "data": {"message": message, "timestamp": asyncio.get_event_loop().time()},
         }
-    })
+    )
 
 
 async def broadcast_status_update():
     """Broadcast status update to all clients"""
     if lapwing_instance:
-        await manager.broadcast({
-            "type": "status_update",
-            "data": {
-                "eii": lapwing_instance.emotional_state.get_eii(),
-                "boredom": lapwing_instance.proactive_system.get_status()
+        await manager.broadcast(
+            {
+                "type": "status_update",
+                "data": {
+                    "eii": lapwing_instance.emotional_state.get_eii(),
+                    "boredom": lapwing_instance.proactive_system.get_status(),
+                },
             }
-        })
+        )
 
 
 # ============================================================================
 # Proactive & Goals Endpoints
 # ============================================================================
 
-@app.get("/proactive/status", response_model=ProactiveStatusResponse, summary="Get proactive system status")
+
+@app.get(
+    "/proactive/status",
+    response_model=ProactiveStatusResponse,
+    summary="Get proactive system status",
+)
 async def get_proactive_status() -> ProactiveStatusResponse:
     """Get current boredom level and proactive state."""
     if lapwing_instance is None:
@@ -595,14 +644,13 @@ async def create_goal(request: GoalRequest) -> dict:
         raise HTTPException(status_code=503, detail="Lapwing not initialized")
 
     goal = lapwing_instance.proactive_system.goal_manager.create_goal(
-        request.description,
-        request.priority
+        request.description, request.priority
     )
     return {
         "id": goal.id,
         "description": goal.description,
         "priority": goal.priority,
-        "created_at": goal.created_at.isoformat()
+        "created_at": goal.created_at.isoformat(),
     }
 
 
@@ -622,12 +670,12 @@ async def list_goals() -> GoalResponse:
                 "description": g.description,
                 "priority": g.priority,
                 "progress": g.progress,
-                "status": g.status
+                "status": g.status,
             }
             for g in active
         ],
         total_active=len(active),
-        total_completed=len(completed)
+        total_completed=len(completed),
     )
 
 
@@ -650,6 +698,7 @@ async def get_proactive_messages() -> dict:
 # Dreaming & Insights Endpoints
 # ============================================================================
 
+
 @app.get("/dreams", response_model=DreamsResponse, summary="Get recent dreams")
 async def get_recent_dreams(limit: int = 5) -> DreamsResponse:
     """Get Lapwing's recent dreams."""
@@ -662,12 +711,14 @@ async def get_recent_dreams(limit: int = 5) -> DreamsResponse:
             {
                 "timestamp": d.timestamp.isoformat(),
                 "phase": d.phase.name,
-                "content": d.content[:200] + "..." if len(d.content) > 200 else d.content,
-                "insights_count": len(d.insights)
+                "content": d.content[:200] + "..."
+                if len(d.content) > 200
+                else d.content,
+                "insights_count": len(d.insights),
             }
             for d in dreams
         ],
-        total=len(lapwing_instance.dreaming_system.dreams)
+        total=len(lapwing_instance.dreaming_system.dreams),
     )
 
 
@@ -684,11 +735,11 @@ async def get_insights(limit: int = 10) -> InsightsResponse:
                 "content": i.content,
                 "emotional_tone": i.emotional_tone,
                 "importance": i.importance,
-                "generated_at": i.generated_at.isoformat()
+                "generated_at": i.generated_at.isoformat(),
             }
             for i in insights
         ],
-        total=len(lapwing_instance.dreaming_system.insights)
+        total=len(lapwing_instance.dreaming_system.insights),
     )
 
 
@@ -699,11 +750,10 @@ async def generate_reflection(topic: str) -> dict:
         raise HTTPException(status_code=503, detail="Lapwing not initialized")
 
     reflection = await lapwing_instance.dreaming_system.generate_reflection(
-        topic=topic,
-        context={"trigger": "user_request"}
+        topic=topic, context={"trigger": "user_request"}
     )
     return {
         "topic": reflection.topic,
         "thoughts": reflection.thoughts,
-        "timestamp": reflection.timestamp.isoformat()
+        "timestamp": reflection.timestamp.isoformat(),
     }

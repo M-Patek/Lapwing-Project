@@ -2,6 +2,7 @@
 Memory Manager with Weighted Retrieval
 Implements time decay and emotional weighting for memories.
 """
+
 import asyncio
 import faiss
 import numpy as np
@@ -21,6 +22,7 @@ from llm_provider import MultiProviderManager
 @dataclass
 class MemoryConfig:
     """Configuration for memory management."""
+
     working_memory_size: int = 10
     short_term_limit: int = 20
     long_term_retrieval_k: int = 3
@@ -43,6 +45,7 @@ class MemoryConfig:
 @dataclass
 class WeightedMemory:
     """记忆项，带有权重元数据"""
+
     content: str
     created_at: datetime
     last_accessed: datetime
@@ -140,7 +143,7 @@ class TimeDecayCalculator:
         self,
         created_at: datetime,
         last_accessed: datetime,
-        now: Optional[datetime] = None
+        now: Optional[datetime] = None,
     ) -> float:
         """
         计算加权衰减（考虑创建时间和最后访问时间）
@@ -165,19 +168,12 @@ class TimeDecayCalculator:
 class EmotionalWeightCalculator:
     """情感权重计算器"""
 
-    def __init__(
-        self,
-        boost_factor: float = 1.5,
-        threshold: float = 0.3
-    ):
+    def __init__(self, boost_factor: float = 1.5, threshold: float = 0.3):
         self.boost_factor = boost_factor
         self.threshold = threshold
 
     def calculate_weight(
-        self,
-        memory_eii: float,
-        current_eii: float,
-        emotional_intensity: float
+        self, memory_eii: float, current_eii: float, emotional_intensity: float
     ) -> float:
         """
         计算情感权重
@@ -219,7 +215,7 @@ class WeightedMemoryManager:
         self,
         settings: Settings,
         api_manager: MultiProviderManager,
-        config: Optional[MemoryConfig] = None
+        config: Optional[MemoryConfig] = None,
     ):
         self.settings = settings
         self.api_manager = api_manager
@@ -227,12 +223,11 @@ class WeightedMemoryManager:
 
         # 初始化计算器
         self.decay_calculator = TimeDecayCalculator(
-            half_life_days=self.config.decay_half_life_days,
-            base=self.config.decay_base
+            half_life_days=self.config.decay_half_life_days, base=self.config.decay_base
         )
         self.emotional_calculator = EmotionalWeightCalculator(
             boost_factor=self.config.emotional_boost_factor,
-            threshold=self.config.emotional_decay_threshold
+            threshold=self.config.emotional_decay_threshold,
         )
 
         self.embedding_cache = EmbeddingCache()
@@ -242,8 +237,7 @@ class WeightedMemoryManager:
 
         # 短期记忆
         self.short_term_memory = load_or_initialize_json(
-            self.settings.SHORT_TERM_MEMORY_FILE,
-            {"recent_events": []}
+            self.settings.SHORT_TERM_MEMORY_FILE, {"recent_events": []}
         )
 
         # 长期记忆（带权重）
@@ -276,8 +270,7 @@ class WeightedMemoryManager:
         try:
             # Load style exemplars if they exist
             style_data = load_or_initialize_json(
-                Path("json/style_exemplars.json"),
-                {"exemplars": []}
+                Path("json/style_exemplars.json"), {"exemplars": []}
             )
             self.style_exemplars = style_data.get("exemplars", [])
             logging.info(f"Style library: {len(self.style_exemplars)} exemplars")
@@ -288,8 +281,7 @@ class WeightedMemoryManager:
     def _load_weighted_memories(self):
         """加载带权重的记忆数据"""
         data = load_or_initialize_json(
-            Path("json/weighted_memories.json"),
-            {"memories": {}}
+            Path("json/weighted_memories.json"), {"memories": {}}
         )
 
         for mem_id, mem_data in data.get("memories", {}).items():
@@ -302,8 +294,7 @@ class WeightedMemoryManager:
         """保存带权重的记忆"""
         data = {
             "memories": {
-                mem_id: mem.to_dict()
-                for mem_id, mem in self.long_term_memories.items()
+                mem_id: mem.to_dict() for mem_id, mem in self.long_term_memories.items()
             }
         }
         save_json(Path("json/weighted_memories.json"), data)
@@ -316,7 +307,7 @@ class WeightedMemoryManager:
         if self.settings.LAPWING_WORLD_LORE:
             lore_chunks = [
                 p.strip()
-                for p in self.settings.LAPWING_WORLD_LORE.split('\n\n')
+                for p in self.settings.LAPWING_WORLD_LORE.split("\n\n")
                 if p.strip()
             ]
             chunks.extend(lore_chunks)
@@ -350,9 +341,12 @@ class WeightedMemoryManager:
         try:
             # 使用 asyncio.run 来获取嵌入（初始化时同步）
             import asyncio
-            embeddings = asyncio.run(self._get_embeddings_async(
-                [mem.content for mem in self.long_term_chunks]
-            ))
+
+            embeddings = asyncio.run(
+                self._get_embeddings_async(
+                    [mem.content for mem in self.long_term_chunks]
+                )
+            )
 
             if embeddings:
                 dimension = len(embeddings[0])
@@ -364,7 +358,9 @@ class WeightedMemoryManager:
                     i: mem_id for i, mem_id in enumerate(self.long_term_memories.keys())
                 }
 
-                logging.info(f"FAISS index rebuilt: {len(embeddings)} vectors, dim={dimension}")
+                logging.info(
+                    f"FAISS index rebuilt: {len(embeddings)} vectors, dim={dimension}"
+                )
 
         except Exception as e:
             logging.error(f"Failed to rebuild FAISS index: {e}")
@@ -382,6 +378,7 @@ class WeightedMemoryManager:
         try:
             # 在线程池中执行 CPU 密集型操作
             import asyncio
+
             embeddings = await self._get_embeddings_async(
                 [mem.content for mem in self.long_term_chunks]
             )
@@ -403,7 +400,9 @@ class WeightedMemoryManager:
                     i: mem_id for i, mem_id in enumerate(self.long_term_memories.keys())
                 }
 
-                logging.info(f"FAISS index rebuilt async: {len(embeddings)} vectors, dim={dimension}")
+                logging.info(
+                    f"FAISS index rebuilt async: {len(embeddings)} vectors, dim={dimension}"
+                )
 
         except Exception as e:
             logging.error(f"Failed to rebuild FAISS index async: {e}")
@@ -414,11 +413,7 @@ class WeightedMemoryManager:
         return await self.api_manager.embedding_client.get_embeddings(texts)
 
     def _calculate_memory_score(
-        self,
-        memory: WeightedMemory,
-        query: str,
-        similarity: float,
-        current_eii: float
+        self, memory: WeightedMemory, query: str, similarity: float, current_eii: float
     ) -> float:
         """
         计算记忆的综合检索分数
@@ -434,23 +429,19 @@ class WeightedMemoryManager:
 
         # 2. 时间衰减分数
         decay_score = self.decay_calculator.calculate_weighted_decay(
-            memory.created_at,
-            memory.last_accessed,
-            now
+            memory.created_at, memory.last_accessed, now
         )
 
         # 3. 情感权重分数
         emotional_score = self.emotional_calculator.calculate_weight(
-            memory.eii_snapshot,
-            current_eii,
-            memory.emotional_intensity
+            memory.eii_snapshot, current_eii, memory.emotional_intensity
         )
 
         # 综合分数
         total_score = (
-            self.config.similarity_weight * sim_score +
-            self.config.recency_weight * decay_score +
-            self.config.emotional_weight * emotional_score
+            self.config.similarity_weight * sim_score
+            + self.config.recency_weight * decay_score
+            + self.config.emotional_weight * emotional_score
         )
 
         # 访问计数加成（频繁访问的记忆稍微提升）
@@ -459,10 +450,7 @@ class WeightedMemoryManager:
         return total_score + access_bonus
 
     async def retrieve_long_term_memories(
-        self,
-        query: str,
-        k: int = None,
-        current_eii: float = 50.0
+        self, query: str, k: int = None, current_eii: float = 50.0
     ) -> List[Tuple[str, float]]:
         """
         检索长期记忆，按加权分数排序
@@ -492,7 +480,9 @@ class WeightedMemoryManager:
 
             # FAISS 检索（获取更多用于重新排序）
             query_np = np.array([query_embedding], dtype=np.float32)
-            distances, indices = self.long_term_index.search(query_np, min(k * 3, len(self.long_term_chunks)))
+            distances, indices = self.long_term_index.search(
+                query_np, min(k * 3, len(self.long_term_chunks))
+            )
 
             # 计算加权分数
             scored_memories = []
@@ -529,25 +519,26 @@ class WeightedMemoryManager:
 
     def add_to_working_memory(self, user_input: str, lapwing_response: str):
         """添加对话到工作记忆"""
-        self.working_memory.append({
-            "user": user_input,
-            "lapwing": lapwing_response,
-        })
+        self.working_memory.append(
+            {
+                "user": user_input,
+                "lapwing": lapwing_response,
+            }
+        )
 
     def get_formatted_working_memory(self) -> str:
         """格式化工作记忆"""
         if not self.working_memory:
             return "We just started talking."
-        return "\n".join([
-            f"Master: {turn['user']}\nLapwing: {turn['lapwing']}"
-            for turn in self.working_memory
-        ])
+        return "\n".join(
+            [
+                f"Master: {turn['user']}\nLapwing: {turn['lapwing']}"
+                for turn in self.working_memory
+            ]
+        )
 
     def add_weighted_memory(
-        self,
-        content: str,
-        eii_snapshot: float,
-        emotional_intensity: float = 50.0
+        self, content: str, eii_snapshot: float, emotional_intensity: float = 50.0
     ) -> str:
         """
         添加带权重的长期记忆
@@ -568,7 +559,7 @@ class WeightedMemoryManager:
             created_at=now,
             last_accessed=now,
             emotional_intensity=emotional_intensity,
-            eii_snapshot=eii_snapshot
+            eii_snapshot=eii_snapshot,
         )
 
         self.long_term_memories[mem_id] = memory
@@ -576,6 +567,7 @@ class WeightedMemoryManager:
 
         # 异步重建索引（不阻塞）
         import asyncio
+
         asyncio.create_task(self._rebuild_index_async())
 
         logging.info(f"Added weighted memory: {mem_id}")
@@ -624,9 +616,7 @@ class WeightedMemoryManager:
 
     # 保持向后兼容
     async def retrieve_long_term_memories_simple(
-        self,
-        query: str,
-        k: int = None
+        self, query: str, k: int = None
     ) -> str:
         """简单版本（向后兼容）"""
         results = await self.retrieve_long_term_memories(query, k, current_eii=50.0)
@@ -640,7 +630,9 @@ class WeightedMemoryManager:
                 return
 
             # 获取所有exemplar文本的嵌入
-            texts = [ex.get("text", "") for ex in self.style_exemplars if ex.get("text")]
+            texts = [
+                ex.get("text", "") for ex in self.style_exemplars if ex.get("text")
+            ]
             if not texts:
                 return
 
@@ -660,7 +652,9 @@ class WeightedMemoryManager:
         except Exception as e:
             logging.warning(f"Failed to build style index: {e}")
 
-    async def retrieve_style_exemplars(self, query: str, k: int = None) -> List[Dict[str, str]]:
+    async def retrieve_style_exemplars(
+        self, query: str, k: int = None
+    ) -> List[Dict[str, str]]:
         """
         检索相似的风格示例
 
@@ -688,7 +682,9 @@ class WeightedMemoryManager:
 
             # FAISS检索
             query_np = np.array([query_embedding], dtype=np.float32)
-            distances, indices = self.style_index.search(query_np, min(k, len(self.style_exemplars)))
+            distances, indices = self.style_index.search(
+                query_np, min(k, len(self.style_exemplars))
+            )
 
             results = []
             for idx in indices[0]:

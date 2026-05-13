@@ -1,11 +1,12 @@
 """
 Utility functions for Lapwing.
 """
+
 import json
 from pathlib import Path
 from typing import TypeVar, Optional
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def safe_json_loads(text: str, default: Optional[T] = None) -> T:
@@ -26,7 +27,7 @@ def safe_json_loads(text: str, default: Optional[T] = None) -> T:
         # Handle markdown code blocks
         if "```" in text:
             # Extract content between first { and last }
-            json_text = text[text.find('{'): text.rfind('}') + 1]
+            json_text = text[text.find("{") : text.rfind("}") + 1]
         else:
             json_text = text.strip()
 
@@ -50,7 +51,7 @@ def load_or_initialize_json(file_path: Path | str, default_structure: T) -> T:
 
     if file_path.exists() and file_path.stat().st_size > 0:
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 return json.load(f)
         except (json.JSONDecodeError, IOError) as e:
             # Log but don't crash - return default
@@ -74,7 +75,7 @@ def save_json(file_path: Path | str, data: T) -> None:
     # Ensure directory exists
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(file_path, 'w', encoding='utf-8') as f:
+    with open(file_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
@@ -92,11 +93,11 @@ def truncate_string(text: str, max_length: int = 100, suffix: str = "...") -> st
     """
     if len(text) <= max_length:
         return text
-    return text[:max_length - len(suffix)] + suffix
+    return text[: max_length - len(suffix)] + suffix
 
 
 def ensure_dirs():
     """Ensure all required directories exist."""
-    dirs = ['json', 'logs', 'prompts']
+    dirs = ["json", "logs", "prompts"]
     for d in dirs:
         Path(d).mkdir(exist_ok=True)

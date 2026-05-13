@@ -2,6 +2,7 @@
 TTS Client for GPT SoVITS Integration
 Provides text-to-speech synthesis with emotion mapping.
 """
+
 import asyncio
 import logging
 import hashlib
@@ -15,30 +16,33 @@ import aiohttp
 
 class EmotionPreset(Enum):
     """Emotion presets for GPT SoVITS voice synthesis."""
-    SAD = "sad"           # EII 0-20: 悲伤/低落
-    CALM = "calm"         # EII 20-40: 平静/思考
-    NEUTRAL = "neutral"   # EII 40-60: 温和/日常
-    HAPPY = "happy"       # EII 60-80: 开心/活泼
-    EXCITED = "excited"   # EII 80-100: 激动/兴奋
+
+    SAD = "sad"  # EII 0-20: 悲伤/低落
+    CALM = "calm"  # EII 20-40: 平静/思考
+    NEUTRAL = "neutral"  # EII 40-60: 温和/日常
+    HAPPY = "happy"  # EII 60-80: 开心/活泼
+    EXCITED = "excited"  # EII 80-100: 激动/兴奋
 
 
 @dataclass
 class TTSConfig:
     """TTS generation configuration."""
-    text_lang: str = "zh"           # Text language: zh, en, ja, etc.
+
+    text_lang: str = "zh"  # Text language: zh, en, ja, etc.
     top_k: int = 5
     top_p: float = 1.0
     temperature: float = 1.0
-    speed_factor: float = 1.0       # Speech speed (0.5-2.0)
-    how_to_cut: str = "凑四句一切"   # Text cutting method
+    speed_factor: float = 1.0  # Speech speed (0.5-2.0)
+    how_to_cut: str = "凑四句一切"  # Text cutting method
 
 
 @dataclass
 class EmotionParams:
     """Emotion-derived synthesis parameters."""
+
     preset: EmotionPreset
-    ref_audio: str                 # Path to reference audio
-    ref_text: str                  # Text of reference audio
+    ref_audio: str  # Path to reference audio
+    ref_text: str  # Text of reference audio
     speed_factor: float
     temperature: float
 
@@ -56,9 +60,9 @@ class GPTSoVITSClient:
         self,
         base_url: str = "http://localhost:9872",
         timeout: float = 60.0,
-        output_dir: Path = Path("audio/generated")
+        output_dir: Path = Path("audio/generated"),
     ):
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.timeout = aiohttp.ClientTimeout(total=timeout)
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -85,23 +89,23 @@ class GPTSoVITSClient:
         # Default config per emotion
         self.emotion_configs = {
             EmotionPreset.SAD: TTSConfig(
-                speed_factor=0.85,      # Slower
-                temperature=0.8,        # More stable
+                speed_factor=0.85,  # Slower
+                temperature=0.8,  # More stable
             ),
             EmotionPreset.CALM: TTSConfig(
-                speed_factor=0.95,      # Slightly slower
+                speed_factor=0.95,  # Slightly slower
                 temperature=0.9,
             ),
             EmotionPreset.NEUTRAL: TTSConfig(
-                speed_factor=1.0,       # Normal
+                speed_factor=1.0,  # Normal
                 temperature=1.0,
             ),
             EmotionPreset.HAPPY: TTSConfig(
-                speed_factor=1.1,       # Slightly faster
-                temperature=1.1,        # More variation
+                speed_factor=1.1,  # Slightly faster
+                temperature=1.1,  # More variation
             ),
             EmotionPreset.EXCITED: TTSConfig(
-                speed_factor=1.2,       # Faster
+                speed_factor=1.2,  # Faster
                 temperature=1.2,
             ),
         }
@@ -143,7 +147,7 @@ class GPTSoVITSClient:
             ref_audio=str(ref_path.absolute()),
             ref_text=self.emotion_texts[preset],
             speed_factor=config.speed_factor,
-            temperature=config.temperature
+            temperature=config.temperature,
         )
 
     def _generate_cache_key(self, text: str, params: EmotionParams) -> str:
@@ -155,6 +159,7 @@ class GPTSoVITSClient:
         """Get cached audio file path."""
         # Organize by date
         from datetime import datetime
+
         date_str = datetime.now().strftime("%Y-%m-%d")
         cache_dir = self.output_dir / "cache" / date_str
         cache_dir.mkdir(parents=True, exist_ok=True)
@@ -166,7 +171,7 @@ class GPTSoVITSClient:
         emotion_preset: Optional[EmotionPreset] = None,
         eii: Optional[float] = None,
         use_cache: bool = True,
-        text_lang: str = "zh"
+        text_lang: str = "zh",
     ) -> Path:
         """
         Synthesize speech from text.
@@ -219,12 +224,13 @@ class GPTSoVITSClient:
         async with aiohttp.ClientSession(timeout=self.timeout) as session:
             try:
                 async with session.post(
-                    f"{self.base_url}/tts",
-                    json=api_data
+                    f"{self.base_url}/tts", json=api_data
                 ) as response:
                     if response.status != 200:
                         error_text = await response.text()
-                        raise RuntimeError(f"TTS API error {response.status}: {error_text}")
+                        raise RuntimeError(
+                            f"TTS API error {response.status}: {error_text}"
+                        )
 
                     # Get audio content
                     audio_data = await response.read()
@@ -234,7 +240,9 @@ class GPTSoVITSClient:
                         output_path = cache_path
                     else:
                         timestamp = int(time.time() * 1000)
-                        output_path = self.output_dir / f"{timestamp}_{emotion_preset.value}.wav"
+                        output_path = (
+                            self.output_dir / f"{timestamp}_{emotion_preset.value}.wav"
+                        )
 
                     output_path.write_bytes(audio_data)
                     logging.info(f"TTS saved: {output_path}")
@@ -251,7 +259,7 @@ class GPTSoVITSClient:
         texts: list[str],
         emotion_preset: Optional[EmotionPreset] = None,
         eii: Optional[float] = None,
-        max_concurrent: int = 3
+        max_concurrent: int = 3,
     ) -> list[Path]:
         """
         Synthesize multiple texts with rate limiting.
@@ -276,7 +284,9 @@ class GPTSoVITSClient:
 
     async def health_check(self) -> dict:
         """Check if TTS service is healthy."""
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as session:
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=5)
+        ) as session:
             try:
                 async with session.get(f"{self.base_url}/health") as response:
                     if response.status == 200:
@@ -299,12 +309,7 @@ class LapwingTTS:
     def __init__(self, base_url: str = "http://localhost:9872"):
         self.client = GPTSoVITSClient(base_url)
 
-    async def speak(
-        self,
-        text: str,
-        eii: float = 50.0,
-        use_cache: bool = True
-    ) -> str:
+    async def speak(self, text: str, eii: float = 50.0, use_cache: bool = True) -> str:
         """
         Generate speech for Lapwing's response.
 
@@ -317,9 +322,7 @@ class LapwingTTS:
             URL/path to audio file (relative to static serve)
         """
         audio_path = await self.client.synthesize(
-            text=text,
-            eii=eii,
-            use_cache=use_cache
+            text=text, eii=eii, use_cache=use_cache
         )
 
         # Convert to relative URL for API response
@@ -334,7 +337,7 @@ class LapwingTTS:
         self,
         text: str,
         eii: float = 50.0,
-        sentence_endings: tuple = ('。', '！', '？', '.', '!', '?')
+        sentence_endings: tuple = ("。", "！", "？", ".", "!", "?"),
     ) -> list[str]:
         """
         Split text into sentences and synthesize each.
@@ -350,6 +353,7 @@ class LapwingTTS:
         """
         # Simple sentence splitting
         import re
+
         pattern = f"([{''.join(sentence_endings)}])"
         parts = re.split(pattern, text)
 
@@ -375,7 +379,7 @@ class LapwingTTS:
         results = await self.client.synthesize_batch(
             texts=sentences,
             eii=eii,
-            max_concurrent=2  # Be gentle on the GPU
+            max_concurrent=2,  # Be gentle on the GPU
         )
 
         return [f"/{r.relative_to(Path.cwd()).as_posix()}" for r in results]

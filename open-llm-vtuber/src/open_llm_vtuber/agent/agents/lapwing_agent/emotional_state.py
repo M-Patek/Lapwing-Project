@@ -24,7 +24,7 @@ class EmotionalState:
         """Update emotional state based on impact (-10 to +10)."""
         # Negative impact is dampened by foundation
         if impact < 0:
-            impact *= (1 - (self.foundation / 200))
+            impact *= 1 - (self.foundation / 200)
 
         self.eii += impact
 

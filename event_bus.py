@@ -2,6 +2,7 @@
 Event Bus System for Lapwing
 Decouples modules using publish/subscribe pattern.
 """
+
 import asyncio
 import logging
 from typing import Dict, List, Callable, Any, Optional
@@ -13,6 +14,7 @@ import weakref
 
 class EventType(Enum):
     """System event types"""
+
     # User interaction events
     USER_MESSAGE = auto()
     USER_SILENCE = auto()
@@ -54,18 +56,18 @@ class EventType(Enum):
 @dataclass
 class Event:
     """Event data structure"""
+
     type: EventType
     data: Dict[str, Any]
     timestamp: datetime
     source: Optional[str] = None
 
     @classmethod
-    def create(cls, event_type: EventType, data: Dict[str, Any] = None, source: str = None):
+    def create(
+        cls, event_type: EventType, data: Dict[str, Any] = None, source: str = None
+    ):
         return cls(
-            type=event_type,
-            data=data or {},
-            timestamp=datetime.now(),
-            source=source
+            type=event_type, data=data or {}, timestamp=datetime.now(), source=source
         )
 
 
@@ -156,7 +158,9 @@ class EventBus:
             except Exception as e:
                 logging.error(f"[EventBus] Weak handler error for {event.type}: {e}")
 
-    async def publish(self, event_type: EventType, data: Dict[str, Any] = None, source: str = None):
+    async def publish(
+        self, event_type: EventType, data: Dict[str, Any] = None, source: str = None
+    ):
         """
         Publish an event to the bus.
 
@@ -212,12 +216,16 @@ class EventBus:
             async def handle_eii_change(event: Event):
                 print(f"EII: {event.data['eii']}")
         """
+
         def decorator(func: Callable):
             self.subscribe(event_type, func, weak)
             return func
+
         return decorator
 
-    def get_history(self, event_type: Optional[EventType] = None, limit: int = 100) -> List[Event]:
+    def get_history(
+        self, event_type: Optional[EventType] = None, limit: int = 100
+    ) -> List[Event]:
         """Get event history"""
         events = self._history
         if event_type:
@@ -243,30 +251,27 @@ def get_event_bus() -> EventBus:
 
 # Convenience functions for common events
 
+
 async def emit_user_message(message: str, source: str = "api"):
     """Emit user message event"""
-    await get_event_bus().publish(
-        EventType.USER_MESSAGE,
-        {"message": message},
-        source
-    )
+    await get_event_bus().publish(EventType.USER_MESSAGE, {"message": message}, source)
 
 
 async def emit_response_generated(response: str, eii: float, source: str = "main"):
     """Emit response generated event"""
     await get_event_bus().publish(
-        EventType.RESPONSE_GENERATED,
-        {"response": response, "eii": eii},
-        source
+        EventType.RESPONSE_GENERATED, {"response": response, "eii": eii}, source
     )
 
 
-async def emit_eii_changed(old_eii: float, new_eii: float, source: str = "emotional_state"):
+async def emit_eii_changed(
+    old_eii: float, new_eii: float, source: str = "emotional_state"
+):
     """Emit EII change event"""
     await get_event_bus().publish(
         EventType.EII_CHANGED,
         {"old_eii": old_eii, "new_eii": new_eii, "delta": new_eii - old_eii},
-        source
+        source,
     )
 
 
@@ -275,21 +280,24 @@ async def emit_memory_added(content: str, eii_snapshot: float, source: str = "me
     await get_event_bus().publish(
         EventType.MEMORY_ADDED,
         {"content": content, "eii_snapshot": eii_snapshot},
-        source
+        source,
     )
 
 
-async def emit_proactive_triggered(message: str, intent_type: str, source: str = "proactive"):
+async def emit_proactive_triggered(
+    message: str, intent_type: str, source: str = "proactive"
+):
     """Emit proactive trigger event"""
     await get_event_bus().publish(
         EventType.PROACTIVE_TRIGGERED,
         {"message": message, "intent_type": intent_type},
-        source
+        source,
     )
 
 
 # Example usage
 if __name__ == "__main__":
+
     async def main():
         bus = get_event_bus()
         await bus.start()

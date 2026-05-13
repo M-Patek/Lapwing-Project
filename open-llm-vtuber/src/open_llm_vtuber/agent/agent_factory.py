@@ -139,9 +139,7 @@ class AgentFactory:
 
             # Create the Lapwing LLM
             llm = StatelessLLMFactory.create_llm(
-                llm_provider=llm_provider,
-                system_prompt=system_prompt,
-                **llm_config
+                llm_provider=llm_provider, system_prompt=system_prompt, **llm_config
             )
 
             return BasicMemoryAgent(
@@ -149,7 +147,9 @@ class AgentFactory:
                 system=system_prompt,
                 live2d_model=live2d_model,
                 tts_preprocessor_config=tts_preprocessor_config,
-                faster_first_response=lapwing_settings.get("faster_first_response", True),
+                faster_first_response=lapwing_settings.get(
+                    "faster_first_response", True
+                ),
                 segment_method=lapwing_settings.get("segment_method", "pysbd"),
                 use_mcpp=False,  # Lapwing handles tools internally
                 interrupt_method=interrupt_method,

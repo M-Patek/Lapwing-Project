@@ -2,6 +2,7 @@
 Abstract LLM Provider Interface
 Supports multiple providers: Anthropic, DeepSeek, OpenAI, etc.
 """
+
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any, AsyncGenerator
 from dataclasses import dataclass
@@ -13,6 +14,7 @@ from settings import Settings
 
 class ProviderType(Enum):
     """Supported LLM provider types"""
+
     ANTHROPIC = auto()
     DEEPSEEK = auto()
     OPENAI = auto()
@@ -22,16 +24,20 @@ class ProviderType(Enum):
 @dataclass
 class LLMResponse:
     """Standardized LLM response"""
+
     text: str
     model: str
     provider: ProviderType
-    usage: Optional[Dict[str, int]] = None  # {"input_tokens": int, "output_tokens": int}
+    usage: Optional[Dict[str, int]] = (
+        None  # {"input_tokens": int, "output_tokens": int}
+    )
     raw_response: Any = None  # Provider-specific raw response
 
 
 @dataclass
 class LLMConfig:
     """Configuration for LLM requests"""
+
     temperature: float = 0.95
     max_tokens: int = 4096
     top_p: Optional[float] = None
@@ -43,6 +49,7 @@ class LLMConfig:
 @dataclass
 class EmbeddingResponse:
     """Standardized embedding response"""
+
     embeddings: List[List[float]]
     model: str
     provider: ProviderType
@@ -54,14 +61,18 @@ class LLMProvider(ABC):
     All providers must implement these methods.
     """
 
-    def __init__(self, api_key: str, base_url: Optional[str] = None, model: Optional[str] = None):
+    def __init__(
+        self, api_key: str, base_url: Optional[str] = None, model: Optional[str] = None
+    ):
         self.api_key = api_key
         self.base_url = base_url
         self.model = model
         self._chat_history: List[Dict[str, str]] = []
 
     @abstractmethod
-    async def chat(self, prompt: str, config: Optional[LLMConfig] = None) -> LLMResponse:
+    async def chat(
+        self, prompt: str, config: Optional[LLMConfig] = None
+    ) -> LLMResponse:
         """
         Send a chat message and get response.
 
@@ -109,7 +120,10 @@ class LLMProvider(ABC):
         pass
 
     async def chat_with_history(
-        self, prompt: str, config: Optional[LLMConfig] = None, clear_history: bool = False
+        self,
+        prompt: str,
+        config: Optional[LLMConfig] = None,
+        clear_history: bool = False,
     ) -> LLMResponse:
         """
         Chat with conversation history maintenance.
@@ -150,7 +164,9 @@ class LLMProvider(ABC):
 class AnthropicProvider(LLMProvider):
     """Anthropic Claude provider"""
 
-    def __init__(self, api_key: str, base_url: Optional[str] = None, model: Optional[str] = None):
+    def __init__(
+        self, api_key: str, base_url: Optional[str] = None, model: Optional[str] = None
+    ):
         super().__init__(api_key, base_url, model or "claude-opus-4-7")
         self._client = None
 
@@ -158,6 +174,7 @@ class AnthropicProvider(LLMProvider):
         """Lazy initialization of Anthropic client"""
         if self._client is None:
             from anthropic import AsyncAnthropic
+
             self._client = AsyncAnthropic(
                 api_key=self.api_key,
                 base_url=self.base_url,
@@ -167,7 +184,9 @@ class AnthropicProvider(LLMProvider):
     def provider_type(self) -> ProviderType:
         return ProviderType.ANTHROPIC
 
-    async def chat(self, prompt: str, config: Optional[LLMConfig] = None) -> LLMResponse:
+    async def chat(
+        self, prompt: str, config: Optional[LLMConfig] = None
+    ) -> LLMResponse:
         cfg = config or LLMConfig()
         client = self._get_client()
 
@@ -187,8 +206,12 @@ class AnthropicProvider(LLMProvider):
                 model=self.model,
                 provider=ProviderType.ANTHROPIC,
                 usage={
-                    "input_tokens": response.usage.input_tokens if response.usage else 0,
-                    "output_tokens": response.usage.output_tokens if response.usage else 0,
+                    "input_tokens": response.usage.input_tokens
+                    if response.usage
+                    else 0,
+                    "output_tokens": response.usage.output_tokens
+                    if response.usage
+                    else 0,
                 },
                 raw_response=response,
             )
@@ -232,8 +255,8 @@ class AnthropicProvider(LLMProvider):
             seed = int(hash_val, 16)
             random.seed(seed)
             vec = [random.gauss(0, 1) for _ in range(1536)]
-            norm = sum(x*x for x in vec) ** 0.5
-            vec = [x/norm for x in vec]
+            norm = sum(x * x for x in vec) ** 0.5
+            vec = [x / norm for x in vec]
             embeddings.append(vec)
             random.seed()
 
@@ -247,14 +270,21 @@ class AnthropicProvider(LLMProvider):
 class DeepSeekProvider(LLMProvider):
     """DeepSeek provider - uses OpenAI compatible API"""
 
-    def __init__(self, api_key: str, base_url: Optional[str] = None, model: Optional[str] = None):
-        super().__init__(api_key, base_url or "https://api.deepseek.com", model or "deepseek-v4-flash")
+    def __init__(
+        self, api_key: str, base_url: Optional[str] = None, model: Optional[str] = None
+    ):
+        super().__init__(
+            api_key,
+            base_url or "https://api.deepseek.com",
+            model or "deepseek-v4-flash",
+        )
         self._client = None
 
     def _get_client(self):
         """Lazy initialization of OpenAI-compatible client for DeepSeek"""
         if self._client is None:
             from openai import AsyncOpenAI
+
             self._client = AsyncOpenAI(
                 api_key=self.api_key,
                 base_url=self.base_url,
@@ -264,7 +294,9 @@ class DeepSeekProvider(LLMProvider):
     def provider_type(self) -> ProviderType:
         return ProviderType.DEEPSEEK
 
-    async def chat(self, prompt: str, config: Optional[LLMConfig] = None) -> LLMResponse:
+    async def chat(
+        self, prompt: str, config: Optional[LLMConfig] = None
+    ) -> LLMResponse:
         cfg = config or LLMConfig()
         client = self._get_client()
 
@@ -289,8 +321,12 @@ class DeepSeekProvider(LLMProvider):
                 model=self.model,
                 provider=ProviderType.DEEPSEEK,
                 usage={
-                    "input_tokens": response.usage.prompt_tokens if response.usage else 0,
-                    "output_tokens": response.usage.completion_tokens if response.usage else 0,
+                    "input_tokens": response.usage.prompt_tokens
+                    if response.usage
+                    else 0,
+                    "output_tokens": response.usage.completion_tokens
+                    if response.usage
+                    else 0,
                 },
                 raw_response=response,
             )
@@ -358,8 +394,8 @@ class DeepSeekProvider(LLMProvider):
                 seed = int(hash_val, 16)
                 random.seed(seed)
                 vec = [random.gauss(0, 1) for _ in range(1536)]
-                norm = sum(x*x for x in vec) ** 0.5
-                vec = [x/norm for x in vec]
+                norm = sum(x * x for x in vec) ** 0.5
+                vec = [x / norm for x in vec]
                 embeddings.append(vec)
                 random.seed()
 
@@ -373,14 +409,19 @@ class DeepSeekProvider(LLMProvider):
 class OpenAIProvider(LLMProvider):
     """OpenAI provider"""
 
-    def __init__(self, api_key: str, base_url: Optional[str] = None, model: Optional[str] = None):
-        super().__init__(api_key, base_url or "https://api.openai.com/v1", model or "gpt-4o")
+    def __init__(
+        self, api_key: str, base_url: Optional[str] = None, model: Optional[str] = None
+    ):
+        super().__init__(
+            api_key, base_url or "https://api.openai.com/v1", model or "gpt-4o"
+        )
         self._client = None
 
     def _get_client(self):
         """Lazy initialization of OpenAI client"""
         if self._client is None:
             from openai import AsyncOpenAI
+
             self._client = AsyncOpenAI(
                 api_key=self.api_key,
                 base_url=self.base_url,
@@ -390,7 +431,9 @@ class OpenAIProvider(LLMProvider):
     def provider_type(self) -> ProviderType:
         return ProviderType.OPENAI
 
-    async def chat(self, prompt: str, config: Optional[LLMConfig] = None) -> LLMResponse:
+    async def chat(
+        self, prompt: str, config: Optional[LLMConfig] = None
+    ) -> LLMResponse:
         cfg = config or LLMConfig()
         client = self._get_client()
 
@@ -415,8 +458,12 @@ class OpenAIProvider(LLMProvider):
                 model=self.model,
                 provider=ProviderType.OPENAI,
                 usage={
-                    "input_tokens": response.usage.prompt_tokens if response.usage else 0,
-                    "output_tokens": response.usage.completion_tokens if response.usage else 0,
+                    "input_tokens": response.usage.prompt_tokens
+                    if response.usage
+                    else 0,
+                    "output_tokens": response.usage.completion_tokens
+                    if response.usage
+                    else 0,
                 },
                 raw_response=response,
             )
@@ -568,14 +615,19 @@ class MultiProviderManager:
             return
 
         # Priority: OpenAI > fallback
-        if self.settings.OPENAI_API_KEY and self.settings.OPENAI_API_KEY != "your-openai-key-here":
+        if (
+            self.settings.OPENAI_API_KEY
+            and self.settings.OPENAI_API_KEY != "your-openai-key-here"
+        ):
             logging.info("Using OpenAI for embeddings (hybrid mode)")
             self._embedding_provider = OpenAIProvider(
                 api_key=self.settings.OPENAI_API_KEY,
                 base_url=self.settings.OPENAI_BASE_URL,
             )
         else:
-            logging.warning("No OpenAI key for embeddings, using fallback (random vectors)")
+            logging.warning(
+                "No OpenAI key for embeddings, using fallback (random vectors)"
+            )
             # Will use the chat provider's fallback implementation
             self._embedding_provider = self._chat_provider
 

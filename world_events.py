@@ -2,6 +2,7 @@
 World State Updater - Simulates Lapwing's independent life in Paris.
 Manages time, weather, social events, and projects.
 """
+
 import asyncio
 import json
 import logging
@@ -36,7 +37,7 @@ class WorldClock:
             (time_string, day_of_week, time_of_day)
         """
         now = self.get_current_time()
-        day_of_week = now.strftime('%A')
+        day_of_week = now.strftime("%A")
         hour = now.hour
 
         if 5 <= hour < 12:
@@ -48,7 +49,7 @@ class WorldClock:
         else:
             time_of_day = "Night"
 
-        return now.strftime('%Y-%m-%d %H:%M'), day_of_week, time_of_day
+        return now.strftime("%Y-%m-%d %H:%M"), day_of_week, time_of_day
 
 
 class SocialManager:
@@ -82,7 +83,7 @@ class SocialManager:
                 "gallery website UI",
                 "cafe menu design",
                 "photography portfolio",
-                "brand identity project"
+                "brand identity project",
             ]
             self.project_name = random.choice(projects)
             return f"Just got a new commission for a {self.project_name}. Exciting!"
@@ -119,14 +120,13 @@ class WeatherService:
                     "current_weather": "true",
                 }
                 response = await client.get(
-                    self.settings.WEATHER_API_URL,
-                    params=params
+                    self.settings.WEATHER_API_URL, params=params
                 )
                 response.raise_for_status()
                 data = response.json()
 
-                temp = data['current_weather']['temperature']
-                code = data['current_weather']['weathercode']
+                temp = data["current_weather"]["temperature"]
+                code = data["current_weather"]["weathercode"]
 
                 # Map weather codes to descriptions
                 weather_desc = self._weather_code_to_description(code)
@@ -136,6 +136,7 @@ class WeatherService:
             logging.warning(f"Weather fetch failed: {e}")
             # Return simulated weather based on time of day
             from datetime import datetime
+
             hour = datetime.now().hour
             if 6 <= hour < 12:
                 return "12°C, Morning mist"
@@ -151,13 +152,25 @@ class WeatherService:
         """Convert WMO weather code to description."""
         weather_codes = {
             0: "Clear sky",
-            1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
-            45: "Fog", 48: "Depositing rime fog",
-            51: "Light drizzle", 53: "Moderate drizzle", 55: "Dense drizzle",
-            61: "Slight rain", 63: "Moderate rain", 65: "Heavy rain",
-            71: "Slight snow", 73: "Moderate snow", 75: "Heavy snow",
-            80: "Slight rain showers", 81: "Moderate rain showers", 82: "Violent rain showers",
-            95: "Thunderstorm", 96: "Thunderstorm with hail",
+            1: "Mainly clear",
+            2: "Partly cloudy",
+            3: "Overcast",
+            45: "Fog",
+            48: "Depositing rime fog",
+            51: "Light drizzle",
+            53: "Moderate drizzle",
+            55: "Dense drizzle",
+            61: "Slight rain",
+            63: "Moderate rain",
+            65: "Heavy rain",
+            71: "Slight snow",
+            73: "Moderate snow",
+            75: "Heavy snow",
+            80: "Slight rain showers",
+            81: "Moderate rain showers",
+            82: "Violent rain showers",
+            95: "Thunderstorm",
+            96: "Thunderstorm with hail",
         }
         return weather_codes.get(code, f"Weather code {code}")
 
@@ -168,11 +181,7 @@ class WorldStateUpdater:
     Runs as a background task to simulate her independent life.
     """
 
-    def __init__(
-        self,
-        settings: Settings,
-        api_manager: MultiProviderManager
-    ):
+    def __init__(self, settings: Settings, api_manager: MultiProviderManager):
         self.settings = settings
         self.api_manager = api_manager
         self.clock = WorldClock(str(settings.PARIS_TZ))
@@ -182,16 +191,15 @@ class WorldStateUpdater:
 
         # Jinja2 template for event generation
         self.jinja_env = Environment(
-            loader=FileSystemLoader('prompts'),
-            autoescape=True
+            loader=FileSystemLoader("prompts"), autoescape=True
         )
-        self.event_template = self.jinja_env.get_template('event_prompts.jinja2')
+        self.event_template = self.jinja_env.get_template("event_prompts.jinja2")
 
     def _load_state(self) -> dict:
         """Load current state from file."""
         if self.state_file.exists() and self.state_file.stat().st_size > 0:
             try:
-                with open(self.state_file, 'r', encoding='utf-8') as f:
+                with open(self.state_file, "r", encoding="utf-8") as f:
                     return json.load(f)
             except json.JSONDecodeError:
                 logging.warning("State file corrupted, using defaults")
@@ -201,10 +209,7 @@ class WorldStateUpdater:
         """Save state to file."""
         save_json(self.state_file, state_data)
 
-    async def _generate_scene(
-        self,
-        context: dict
-    ) -> str:
+    async def _generate_scene(self, context: dict) -> str:
         """
         Generate new scene description using LLM.
 
@@ -217,10 +222,9 @@ class WorldStateUpdater:
         prompt = self.event_template.render(**context)
 
         try:
-            response = await self.api_manager.scene_provider.chat(prompt, LLMConfig(
-                temperature=0.95,
-                max_tokens=500
-            ))
+            response = await self.api_manager.scene_provider.chat(
+                prompt, LLMConfig(temperature=0.95, max_tokens=500)
+            )
             return response.text.strip()[:500]  # Limit length
         except Exception as e:
             logging.error(f"Scene generation failed: {e}")
@@ -233,10 +237,10 @@ class WorldStateUpdater:
         try:
             # Load current state
             state = self._load_state()
-            timeline = state.get("current_timeline", {
-                "scene": "Waking up.",
-                "next_intention": "Thinking about the day."
-            })
+            timeline = state.get(
+                "current_timeline",
+                {"scene": "Waking up.", "next_intention": "Thinking about the day."},
+            )
 
             # Gather context
             weather_str = await self.weather.get_weather()
@@ -259,11 +263,13 @@ class WorldStateUpdater:
             new_timeline = {
                 "previous_event": timeline.get("scene", "A quiet moment."),
                 "scene": new_scene,
-                "next_intention": "Thinking about what to do next..."
+                "next_intention": "Thinking about what to do next...",
             }
 
             state["current_timeline"] = new_timeline
-            state["last_world_update_timestamp"] = datetime.now(timezone.utc).isoformat()
+            state["last_world_update_timestamp"] = datetime.now(
+                timezone.utc
+            ).isoformat()
 
             self._save_state(state)
             logging.info(f"World state updated: {new_scene[:100]}...")

@@ -3,6 +3,7 @@ Memory Consolidation Script
 Processes staged memories and promotes significant ones to long-term storage.
 Run periodically (e.g., nightly via cron) or manually with `python run_consolidation.py`
 """
+
 import asyncio
 import json
 import logging
@@ -24,11 +25,11 @@ def setup_consolidation_logging() -> None:
 
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
+        format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[
-            logging.FileHandler(log_file, encoding='utf-8'),
-            logging.StreamHandler()
-        ]
+            logging.FileHandler(log_file, encoding="utf-8"),
+            logging.StreamHandler(),
+        ],
     )
 
 
@@ -39,10 +40,7 @@ class MemoryConsolidator:
         self.settings = settings
         self.api_manager = api_manager
 
-    async def _evaluate_memories(
-        self,
-        staged_memories: List[dict]
-    ) -> Optional[dict]:
+    async def _evaluate_memories(self, staged_memories: List[dict]) -> Optional[dict]:
         """
         Use LLM to evaluate which memories are significant.
 
@@ -58,7 +56,7 @@ class MemoryConsolidator:
         # Format memories for prompt
         memories_text = json.dumps(staged_memories, indent=2, ensure_ascii=False)
 
-        prompt = f'''[TASK] Act as a Memory Arbiter.
+        prompt = f"""[TASK] Act as a Memory Arbiter.
 Review these potential memories from conversations between Lapwing and her master.
 Identify significant memories worth keeping as long-term core memories.
 
@@ -79,7 +77,7 @@ Return JSON:
     "new_shared_memories": ["..."]
 }}
 
-Return empty arrays if none are significant.'''
+Return empty arrays if none are significant."""
 
         try:
             response = await self.api_manager.scene_client.generate_content(prompt)
@@ -88,11 +86,7 @@ Return empty arrays if none are significant.'''
             logging.error(f"Memory evaluation failed: {e}")
             return None
 
-    def _merge_memories(
-        self,
-        long_term: dict,
-        consolidated: dict
-    ) -> bool:
+    def _merge_memories(self, long_term: dict, consolidated: dict) -> bool:
         """
         Merge consolidated memories into long-term storage.
 
@@ -141,11 +135,7 @@ Return empty arrays if none are significant.'''
 
         return updated
 
-    def _archive_staged(
-        self,
-        staged_memories: List[dict],
-        consolidated: dict
-    ) -> None:
+    def _archive_staged(self, staged_memories: List[dict], consolidated: dict) -> None:
         """
         Archive processed memories.
         Keeps rejected memories in a separate archive file for review.
@@ -156,11 +146,13 @@ Return empty arrays if none are significant.'''
         archive = load_or_initialize_json(archive_file, {"archived": []})
 
         # Add processed memories with timestamp
-        archive["archived"].append({
-            "processed_at": datetime.now().isoformat(),
-            "consolidated": consolidated,
-            "staged_count": len(staged_memories)
-        })
+        archive["archived"].append(
+            {
+                "processed_at": datetime.now().isoformat(),
+                "consolidated": consolidated,
+                "staged_count": len(staged_memories),
+            }
+        )
 
         save_json(archive_file, archive)
         logging.info(f"Archived {len(staged_memories)} processed memories")
@@ -178,14 +170,13 @@ Return empty arrays if none are significant.'''
             "added_dislikes": 0,
             "added_memories": 0,
             "success": False,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         try:
             # Load staged memories
             staging_data = load_or_initialize_json(
-                self.settings.STAGING_FILE,
-                {"potential_memories": []}
+                self.settings.STAGING_FILE, {"potential_memories": []}
             )
 
             staged = staging_data.get("potential_memories", [])
@@ -206,10 +197,7 @@ Return empty arrays if none are significant.'''
                 return stats
 
             # Load long-term memory
-            long_term = load_or_initialize_json(
-                self.settings.MEMORY_FILE,
-                {}
-            )
+            long_term = load_or_initialize_json(self.settings.MEMORY_FILE, {})
 
             # Merge memories
             updated = self._merge_memories(long_term, consolidated)

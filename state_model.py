@@ -1,15 +1,18 @@
 from typing import List
 from pydantic import BaseModel, Field
 
+
 class Timeline(BaseModel):
     scene: str = "Waking up."
     next_intention: str = "Thinking about the day."
     previous_event: str = "A quiet moment."
 
+
 class PADState(BaseModel):
     p: float = 0.6
     a: float = 0.3
     d: float = 0.7
+
 
 class LapwingState(BaseModel):
     pad_emotional_state: PADState = Field(default_factory=PADState)

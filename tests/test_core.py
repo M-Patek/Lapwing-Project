@@ -1,6 +1,7 @@
 """
 Test suite for Lapwing
 """
+
 import pytest
 import sys
 from pathlib import Path
@@ -12,7 +13,11 @@ import asyncio
 from datetime import datetime
 
 from main import EmotionalState
-from memory_weighted import TimeDecayCalculator, EmotionalWeightCalculator, WeightedMemory
+from memory_weighted import (
+    TimeDecayCalculator,
+    EmotionalWeightCalculator,
+    WeightedMemory,
+)
 from event_bus import EventBus, EventType, Event
 
 
@@ -123,7 +128,7 @@ class TestWeightedMemory:
             created_at=datetime.now(),
             last_accessed=datetime.now(),
             emotional_intensity=70.0,
-            eii_snapshot=60.0
+            eii_snapshot=60.0,
         )
         assert mem.content == "Test memory"
         assert mem.emotional_intensity == 70.0
@@ -134,7 +139,7 @@ class TestWeightedMemory:
             created_at=datetime(2024, 1, 1, 12, 0, 0),
             last_accessed=datetime(2024, 1, 1, 12, 0, 0),
             emotional_intensity=50.0,
-            eii_snapshot=50.0
+            eii_snapshot=50.0,
         )
         data = mem.to_dict()
         assert data["content"] == "Test"

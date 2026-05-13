@@ -2,6 +2,7 @@
 Lapwing Live2DViewerEX Bridge
 Simple bridge to sync Lapwing's emotional state with Live2DViewerEX
 """
+
 import asyncio
 import httpx
 import logging
@@ -32,10 +33,7 @@ async def sync_emotion():
                 expr = "cry"
 
             # Send to Live2DViewerEX
-            await client.post(
-                f"{LIVE2D_API}/setExpression",
-                json={"name": expr}
-            )
+            await client.post(f"{LIVE2D_API}/setExpression", json={"name": expr})
 
             logging.info(f"EII {eii} -> {expr}")
 
