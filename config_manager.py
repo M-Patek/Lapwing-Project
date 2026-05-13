@@ -11,7 +11,7 @@ from datetime import datetime
 import json
 import yaml
 from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler, FileModifiedEvent
+from watchdog.events import FileSystemEventHandler
 
 from settings import Settings
 

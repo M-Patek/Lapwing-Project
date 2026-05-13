@@ -13,9 +13,9 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWebChannel import QWebChannel
 from PyQt6.QtCore import (
-    Qt, QUrl, pyqtSignal, pyqtSlot, QObject, QPoint
+    Qt, QUrl, pyqtSignal, pyqtSlot, QObject
 )
-from PyQt6.QtGui import QIcon, QAction, QKeySequence, QShortcut
+from PyQt6.QtGui import QAction, QKeySequence, QShortcut
 
 
 class LapwingBridge(QObject):
@@ -57,7 +57,7 @@ class LapwingBridge(QObject):
             )
             data = response.json()
             return data.get("audio_url", "")
-        except Exception as e:
+        except Exception:
             return ""
 
     @pyqtSlot(result=str)
@@ -68,7 +68,7 @@ class LapwingBridge(QObject):
             response = requests.get(f"{self.api_url}/health", timeout=5)
             data = response.json()
             return f"EII: {data.get('eii', 'unknown')}"
-        except:
+        except Exception:
             return "Disconnected"
 
 

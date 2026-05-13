@@ -5,8 +5,8 @@ Generates insights, consolidates memories, and creates narrative summaries.
 """
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Tuple
+from datetime import datetime
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from pathlib import Path
 from enum import Enum, auto

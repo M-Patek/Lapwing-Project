@@ -56,7 +56,7 @@ def check_file_for_secrets(filepath: Path) -> list:
 
                 line_num = content[:match.start()].count('\n') + 1
                 issues.append(f"{filepath}:{line_num}: Potential {desc}")
-    except Exception as e:
+    except Exception:
         pass  # Skip files that can't be read
 
     return issues

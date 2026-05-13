@@ -4,7 +4,6 @@ Provides file storage, cleanup, and static file serving configuration.
 """
 import asyncio
 import logging
-import shutil
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import List, Optional

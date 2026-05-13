@@ -3,15 +3,14 @@ Memory Manager with Weighted Retrieval
 Implements time decay and emotional weighting for memories.
 """
 import asyncio
-import json
 import faiss
 import numpy as np
 import logging
 from pathlib import Path
 from collections import deque
 from typing import List, Optional, Dict, Any, Tuple
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 import math
 
 from settings import Settings

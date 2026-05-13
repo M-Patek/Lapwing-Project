@@ -3,23 +3,22 @@ Lapwing Core - AI Character with Emotional Intelligence
 Main orchestrator for conversation, emotion tracking, and memory management.
 Includes Proactive Behavior, Weighted Memory, and Dreaming systems.
 """
-import json
 import re
 import logging
 import asyncio
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
-from typing import Optional, Tuple, List, Dict, Any
+from typing import Optional, List, Dict, Any
 from jinja2 import Environment, FileSystemLoader
 
 from settings import Settings
 from memory_weighted import WeightedMemoryManager, MemoryConfig
-from llm_provider import MultiProviderManager, LLMConfig
+from llm_provider import MultiProviderManager
 from world_events import WorldStateUpdater
 from proactive_system import BoredomSystem, BoredomConfig
 from dreaming_system import DreamingSystem, DreamingConfig
-from event_bus import EventBus, EventType, get_event_bus, emit_eii_changed, emit_memory_added, emit_proactive_triggered
+from event_bus import get_event_bus, emit_eii_changed, emit_memory_added, emit_proactive_triggered
 from utils import safe_json_loads, load_or_initialize_json, save_json
 
 

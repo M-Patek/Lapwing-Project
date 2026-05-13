@@ -5,12 +5,11 @@
 import asyncio
 import random
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum, auto
 from typing import Optional, Callable, List, Dict, Any
 from dataclasses import dataclass, field
 from pathlib import Path
-import json
 
 from settings import Settings
 from utils import load_or_initialize_json, save_json
@@ -553,7 +552,7 @@ class BoredomSystem:
         # 填充模板
         try:
             message = intent.content.format(**fill_data)
-        except KeyError as e:
+        except KeyError:
             # 模板填充失败，使用简化版本
             message = f"{greeting}... 你在吗？"
 

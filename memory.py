@@ -64,9 +64,12 @@ class MemoryManager:
         prefs = memory_data.get("user_profile", {}).get("preferences", [])
         dislikes = memory_data.get("user_profile", {}).get("dislikes", [])
         mems = memory_data.get("shared_memories", [])
-        if prefs: chunks.append(f"Master likes these things: {', '.join(prefs)}.")
-        if dislikes: chunks.append(f"Master dislikes: {', '.join(dislikes)}.")
-        if mems: chunks.extend(mems)
+        if prefs:
+            chunks.append(f"Master likes these things: {', '.join(prefs)}.")
+        if dislikes:
+            chunks.append(f"Master dislikes: {', '.join(dislikes)}.")
+        if mems:
+            chunks.extend(mems)
         return chunks
 
     def add_to_working_memory(self, user_input: str, lapwing_response: str):

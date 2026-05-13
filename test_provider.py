@@ -3,7 +3,6 @@ Quick test script for the LLM provider system
 Tests the abstract interface with different providers
 """
 import asyncio
-import os
 from dotenv import load_dotenv
 
 from llm_provider import (
@@ -57,7 +56,7 @@ async def test_provider(provider_type: ProviderType, name: str):
             return False
 
         # Test chat
-        print(f"\n[TEST] Testing chat...")
+        print("\n[TEST] Testing chat...")
         config = LLMConfig(temperature=0.7, max_tokens=100)
 
         response = await provider.chat(
@@ -65,7 +64,7 @@ async def test_provider(provider_type: ProviderType, name: str):
             config=config,
         )
 
-        print(f"[OK] Response received:")
+        print("[OK] Response received:")
         print(f"   Text: {response.text[:100]}...")
         print(f"   Model: {response.model}")
         print(f"   Provider: {response.provider.name}")
@@ -74,7 +73,7 @@ async def test_provider(provider_type: ProviderType, name: str):
             print(f"   Tokens: {response.usage}")
 
         # Test embeddings (fallback)
-        print(f"\n[STAT] Testing embeddings (fallback)...")
+        print("\n[STAT] Testing embeddings (fallback)...")
         embeddings = await provider.get_embeddings(["Hello world", "测试文本"])
         print(f"[OK] Got {len(embeddings.embeddings)} embeddings")
         print(f"   Dimension: {len(embeddings.embeddings[0])}")
@@ -91,20 +90,20 @@ async def test_provider(provider_type: ProviderType, name: str):
 
 async def test_multi_provider():
     """Test MultiProviderManager auto-detection"""
-    print(f"\n{'='*50}")
-    print(f"Testing MultiProviderManager")
-    print(f"{'='*50}")
+    print("\n" + "="*50)
+    print("Testing MultiProviderManager")
+    print("="*50)
 
     try:
         settings = Settings()
         manager = MultiProviderManager(settings)
 
-        print(f"\n[OK] Providers initialized:")
+        print("\n[OK] Providers initialized:")
         print(f"   Chat: {manager.chat_provider.provider_type().name}")
         print(f"   Scene: {manager.scene_provider.provider_type().name}")
 
         # Test a simple conversation
-        print(f"\n[TEST] Testing conversation...")
+        print("\n[TEST] Testing conversation...")
         config = LLMConfig(temperature=0.9, max_tokens=150)
 
         response = await manager.chat_provider.chat(
@@ -112,10 +111,10 @@ async def test_multi_provider():
             config=config,
         )
 
-        print(f"[OK] Response:")
+        print("[OK] Response:")
         print(f"   {response.text}")
 
-        print(f"\n[OK] MultiProviderManager test PASSED")
+        print("\n[OK] MultiProviderManager test PASSED")
         return True
 
     except Exception as e:
@@ -127,9 +126,9 @@ async def test_multi_provider():
 
 async def chat_with_lapwing():
     """Simple chat with Lapwing using the new provider system"""
-    print(f"\n{'='*50}")
-    print(f"[CHAT] Chatting with Lapwing")
-    print(f"{'='*50}")
+    print("\n" + "="*50)
+    print("[CHAT] Chatting with Lapwing")
+    print("="*50)
 
     try:
         settings = Settings()
@@ -137,7 +136,7 @@ async def chat_with_lapwing():
 
         print(f"\nProvider: {manager.chat_provider.provider_type().name}")
         print(f"Model: {settings.CHAT_MODEL or 'auto-detected'}")
-        print(f"\nType 'quit' to exit\n")
+        print("\nType 'quit' to exit\n")
 
         history = []
 
@@ -150,7 +149,7 @@ async def chat_with_lapwing():
                 continue
 
             # Build prompt with history
-            prompt = f"你是Lapwing，一个温柔的女孩。请用第一人称回复。\n\n"
+            prompt = "你是Lapwing，一个温柔的女孩。请用第一人称回复。\n\n"
             for h in history[-6:]:  # Last 3 exchanges
                 prompt += f"用户: {h['user']}\nLapwing: {h['assistant']}\n\n"
             prompt += f"用户: {user_input}\nLapwing:"
@@ -206,19 +205,19 @@ async def main():
     results.append(await test_multi_provider())
 
     # Summary
-    print(f"\n{'='*50}")
-    print(f"[STAT] Test Summary")
-    print(f"{'='*50}")
+    print("\n" + "="*50)
+    print("[STAT] Test Summary")
+    print("="*50)
     passed = sum(results)
     total = len(results)
     print(f"Passed: {passed}/{total}")
 
     if passed == total:
-        print(f"\n[SUCCESS] All tests passed!")
+        print("\n[SUCCESS] All tests passed!")
         # Start chat
         await chat_with_lapwing()
     else:
-        print(f"\n[WARN] Some tests failed. Check your configuration.")
+        print("\n[WARN] Some tests failed. Check your configuration.")
 
 
 if __name__ == "__main__":

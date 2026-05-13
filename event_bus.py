@@ -4,11 +4,10 @@ Decouples modules using publish/subscribe pattern.
 """
 import asyncio
 import logging
-from typing import Dict, List, Callable, Any, Optional, Coroutine
+from typing import Dict, List, Callable, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, auto
-import inspect
 import weakref
 
 

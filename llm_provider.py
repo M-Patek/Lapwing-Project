@@ -2,12 +2,13 @@
 Abstract LLM Provider Interface
 Supports multiple providers: Anthropic, DeepSeek, OpenAI, etc.
 """
-import asyncio
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any, AsyncGenerator
 from dataclasses import dataclass
 from enum import Enum, auto
 import logging
+
+from settings import Settings
 
 
 class ProviderType(Enum):

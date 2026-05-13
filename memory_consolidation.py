@@ -12,7 +12,7 @@ from typing import Dict, List, Optional
 
 from dotenv import load_dotenv
 from settings import Settings
-from llm_provider import MultiProviderManager
+from api_client import ApiClientManager
 from utils import load_or_initialize_json, save_json, safe_json_loads
 
 

@@ -3,7 +3,7 @@ Tests for Lapwing core functionality.
 Run with: pytest tests/test_main.py -v
 """
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from main import Lapwing, EmotionalState
 from settings import Settings

@@ -3,7 +3,6 @@ Structured Logging for Lapwing
 JSON-formatted logs for better analysis and monitoring.
 """
 import logging
-import json
 import sys
 from datetime import datetime
 from typing import Dict, Any, Optional

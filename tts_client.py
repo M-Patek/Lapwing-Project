@@ -7,7 +7,7 @@ import logging
 import hashlib
 import time
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 from dataclasses import dataclass
 from enum import Enum
 import aiohttp
